@@ -61,8 +61,20 @@ def generalize_categorical():
 
 
 def generalize_numeric(zip, n):
-    # TODO: your code here
-    raise NotImplementedError()
+    if n == 0:
+            return zip
+    
+    else:
+        # 1. Convert the number to a string so we can "see/parse" the digits
+        s = str(zip)
+
+        # 2. Slice: Keep everything up to the last 'n' digits
+        prefix = s[:-n]
+        # 3. Overwrite: Fill up the rest with '0' by repeating it 'n' times
+        suffix = '0' * n
+
+        # 4. Join them and cast back to an integer for the test cases
+        return int(prefix + suffix)
 
 
 def suppress_count(k, qis, df):
@@ -174,6 +186,12 @@ if __name__ == "__main__":
     # thus homogeneity attacks are possible against the rows("Married         < HS         1" and "Not Married     < HS         1") because these combination "buckets" of "Education" and "Marital Status" only have one Target variant (either >50k or <=50k) in their "bucket".
 
 
+    #Exercise 3
+    assert generalize_numeric(47401, 0) == 47401
+    assert generalize_numeric(47401, 2) == 47400
+    assert generalize_numeric(47401, 4) == 40000
+
+    
 
 
 
