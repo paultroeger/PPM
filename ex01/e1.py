@@ -165,13 +165,13 @@ if __name__ == "__main__":
     print(homogeneity_check)
     #which will give us this output
     ''' 
-    Marital Status  Education    nunique
-    Married         < HS         1
-                    >= HS        2
-    Not Married     < HS         1
-                    >= HS        2
+    Education  Marital Status
+    < HS       Married           1
+               Not Married       1
+    >= HS      Married           2
+               Not Married       2
     '''
-    # thus homogeinity attacks are possible against the first and third row (Married         < HS         1 and Not Married     < HS         1) because these combinations of Education and Marital Status only have Target variant (either >50k or <=50k) in their "bucket".
+    # thus homogeneity attacks are possible against the rows("Married         < HS         1" and "Not Married     < HS         1") because these combination "buckets" of "Education" and "Marital Status" only have one Target variant (either >50k or <=50k) in their "bucket".
 
 
 
