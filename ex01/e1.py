@@ -3,6 +3,18 @@ import pandas as pd
 import numpy as np
 import scipy.stats
 import pytest
+
+# Reminder: 
+
+# k-anonymity: how many ppl with certain qis (married + PhD) combinations are 
+# in the dataset (sensitive attributes are ignored for this). 
+# -> i.e. how many ppl will land in the married + PhD bucket (ignoring if they
+#    are <50k or >50k)
+
+# l-diversity: for a certain qis combination ("bucket") how many different 
+# variations of sensitive attributes exist (e.g. 2 for >50k and <50k) 
+# -> protects against homogeneity attack
+
 ADULT_CSV_PATH = r'C:\2.0\Privacy-Preserving Methods for Data Science and Distributed Systems\Privacy-Preserving-Methods-for-Data-Science-and-Distributed-Systems-\ex01\adult_with_pii.csv'
 
 def is_k_anonymous(k, qis, df):
@@ -16,7 +28,7 @@ def is_k_anonymous(k, qis, df):
 
 def generalize_categorical():
     # I wasn't sure if we can assume this function is run after the main script. Just wanna make sure the adult data set is loaded correctly.
-    # This is the "Safety Net" for the grader's environment
+    # This is the "Safety Net" if the pytests only call my function
     adult = pd.read_csv(ADULT_CSV_PATH)
 
     adult_small = adult[['Education', 'Marital Status', 'Target']]
@@ -60,13 +72,13 @@ def generalize_categorical():
 
 
 
-def generalize_numeric(zip, n):
+def generalize_numeric(val, n):
     if n == 0:
-            return zip
+            return val
     
     else:
         # 1. Convert the number to a string so we can "see/parse" the digits
-        s = str(zip)
+        s = str(val)
 
         # 2. Slice: Keep everything up to the last 'n' digits
         prefix = s[:-n]
@@ -77,9 +89,19 @@ def generalize_numeric(zip, n):
         return int(prefix + suffix)
 
 
-def suppress_count(k, qis, df):
-    # TODO: your code here
-    raise NotImplementedError()
+#returns the number of rows you need to suppress to achieve a given k
+def suppress_count(k, qis, adult):
+    #gives the number of people in each bucket
+    group_counts=adult[qis].value_counts()
+
+    #filters for all the qis combinations (buckets) that violate k-anonymity,
+    #listing the number of people that are in this bucket. 
+    unsafe_groups = group_counts[group_counts < k] 
+
+    #sums over all the people in the buckets and tells me how many id need to
+    #suppress to become k anonymous 
+    total_unsafe_rows = unsafe_groups.sum() 
+    return total_unsafe_rows
 
 
 def is_l_diverse(l, qis, sens_col, df, type='probabilistic'):
