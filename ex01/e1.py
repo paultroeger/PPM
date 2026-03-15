@@ -17,18 +17,163 @@ import pytest
 
 ADULT_CSV_PATH = r'C:\2.0\Privacy-Preserving Methods for Data Science and Distributed Systems\Privacy-Preserving-Methods-for-Data-Science-and-Distributed-Systems-\ex01\adult_with_pii.csv'
 
+
+
+# asserts that loading the dataset works
+def test_load_dataset():
+    # Execute the function to trigger internal loading
+    df = generalize_categorical()
+
+    # Verify it returned a DataFrame
+    assert isinstance(df, pd.DataFrame), "Result is not a pandas DataFrame"
+
+    # Verify columns were correctly selected internally
+    expected_cols = ['Education', 'Marital Status', 'Target']
+    assert all(col in df.columns for col in expected_cols), "Column selection failed"
+
+    # Verify the internal slice [0:100] was applied
+    assert len(df) == 100, f"Expected 100 rows, but got {len(df)}"
+
+    # Verify data integrity (checking if 'Target' exists and is populated)
+    assert df['Target'].notnull().any(), "Data values are missing or null"
+
+#assert that True is returned on the empty dataframe
+def test_k_anonymous_emptydf():
+    adult = pd.read_csv(ADULT_CSV_PATH)
+    adult_small = adult[['Education', 'Marital Status', 'Target']]
+    adult_small = adult_small[0:0]
+    qis = ['Education', 'Marital Status']
+
+    assert is_k_anonymous(1, qis, adult_small) == True
+
+#assert single entry dataframe is returned ruled as 1-anonymous
+def test_k_anonymous_onerowdf():
+    adult = pd.read_csv(ADULT_CSV_PATH)
+    adult_small = adult[['Education', 'Marital Status', 'Target']]
+    adult_small = adult_small[0:1]
+    qis = ['Education', 'Marital Status']
+    
+    assert is_k_anonymous(1, qis, adult_small) == True
+    assert is_k_anonymous(2, qis, adult_small) == False
+
+# asserts that generalize_categorical actually terminates immediately on the empty dataset
+# since I can't overwrite the dataset and am not allowed to change the funciton signature
+# of generalize_categorical() I have to use code duplicates as workaround.
+def test_generalize_categorical_emptydf():
+    adult = pd.read_csv(ADULT_CSV_PATH)
+
+    adult_small = adult[['Education', 'Marital Status', 'Target']]
+    adult_small = adult_small[0:0]
+    qis = ['Education', 'Marital Status']
+
+    # check 1-anonymity which should be true
+    if is_k_anonymous(1, qis, adult_small):
+        flag = 'Dataset remains unchanged! I did nothing.' # save flag to assert later
+    else:
+        assert 1==2 # should the if clause fail the test must fail
+
+    assert flag == 'Dataset remains unchanged! I did nothing.'
+
+def test_generalize_categorical_emptydf():
+    adult = pd.read_csv(ADULT_CSV_PATH)
+
+    adult_small = adult[['Education', 'Marital Status', 'Target']]
+    adult_small = adult_small[0:0]
+    qis = ['Education', 'Marital Status']
+
+    # check 1-anonymity which should be true
+    if is_k_anonymous(1, qis, adult_small):
+        flag = 'Dataset remains unchanged! I did nothing.' # save flag to assert later
+    else:
+        assert 1==2 # should the if clause fail the test must fail
+
+    assert flag == 'Dataset remains unchanged! I did nothing.'
+
+#asserts that it actually achieves the 2-anonymity for our adult_small dataset.
+def test_generalize_categorical_achieves_anonymity():
+    # 1. Run the actual function on the actual adult.csv
+    result = generalize_categorical()
+
+    # 2. Check: Did it actually achieve 2-anonymity?
+    qis = ['Education', 'Marital Status']
+    is_safe = is_k_anonymous(2, qis, result)
+    
+    assert is_safe == True, "The function failed to achieve 2-anonymity on the real data!"
+
+#asserts that the categories "Marital Status" and "EducatioN" have the correct
+#generalized entries and no entries were forgotten
+def test_generalize_categorical_correct_column_entries():
+
+    result = generalize_categorical()
+    allowed_edu = {'< HS', '>= HS'}
+    actual_edu = set(result['Education'].unique())
+    assert actual_edu.issubset(allowed_edu), f"Found unexpected Education values: {actual_edu}"
+    allowed_marital = {'Married', 'Not Married'}
+    actual_marital = set(result['Marital Status'].unique())
+    assert actual_marital.issubset(allowed_marital), f"Found unexpected Marital Status values: {actual_marital}"
+
+'''
+We know that our function generalize_categorical() generalizes Education and Marital Status in order to achieve 2-anonymity. We will now test if these generalizations were really necessary by asserting that the dataset was indeed not 2-anonymous after each step. Testing this is important because we want the generalization to be minimal in order to maximize utility (=data is more statistically meaningful to an analyst if it is less generalized)
+'''
+
+#asserts generalizing nothing is not enough to achieve 2-anonymity. 
+def test_generalize_categorical_nothing_not_enough():
+    adult = pd.read_csv(ADULT_CSV_PATH)
+
+    adult_small = adult[['Education', 'Marital Status', 'Target']]
+    adult_small = adult_small[0:100]
+    qis = ['Education', 'Marital Status']
+
+    assert (~ is_k_anonymous(2, qis, adult_small))
+
+def test_generalize_categorical_education_not_enough():
+    adult = pd.read_csv(ADULT_CSV_PATH)
+
+    adult_small = adult[['Education', 'Marital Status', 'Target']]
+    adult_small = adult_small[0:100]
+    qis = ['Education', 'Marital Status']
+
+    #generalizes Education status
+    no_HSdegree = ['11th', '10th', '7th-8th', '9th', '12th', '5th-6th', '1st-4th', 'Preschool']
+    adult_small.loc[ adult_small['Education'].isin(no_HSdegree), 'Education'] = '< HS'
+    adult_small.loc[ ~adult_small['Education'].isin(['< HS']), 'Education'] = '>= HS'
+
+    assert (~ is_k_anonymous(2, qis, adult_small))
+
+def test_generalize_categorical_education_and_marital_enough():
+    adult = pd.read_csv(ADULT_CSV_PATH)
+
+    adult_small = adult[['Education', 'Marital Status', 'Target']]
+    adult_small = adult_small[0:100]
+    qis = ['Education', 'Marital Status']
+    no_HSdegree = ['11th', '10th', '7th-8th', '9th', '12th', '5th-6th', '1st-4th', 'Preschool']
+    adult_small.loc[ adult_small['Education'].isin(no_HSdegree), 'Education'] = '< HS'
+    adult_small.loc[ ~adult_small['Education'].isin(['< HS']), 'Education'] = '>= HS'
+
+    not_married = ['Never-married', 'Divorced', 'Widowed']
+    adult_small.loc[ adult_small['Marital Status'].isin(not_married), 'Marital Status'] = 'Not Married'
+    adult_small.loc[ ~adult_small['Marital Status'].isin(['Not Married']), 'Marital Status'] = 'Married'
+
+    assert (is_k_anonymous(2, qis, adult_small))
+
+
+
 def is_k_anonymous(k, qis, df):
     """Returns true if df satisfies k-Anonymity for the quasi-identifiers 
     qis. Returns false otherwise."""
-    # value_counts on a list of columns returns the size of every unique group
-    group_counts = df[qis].value_counts()
-    
-    # Check if the smallest group is at least k
-    return group_counts.min() >= k
+
+    if (df.empty):
+        return True
+    else:
+        # value_counts on a list of columns returns the size of every unique group
+        group_counts = df[qis].value_counts()
+        
+        # Check if the smallest group is at least k
+        return group_counts.min() >= k
 
 def generalize_categorical():
     # I wasn't sure if we can assume this function is run after the main script. Just wanna make sure the adult data set is loaded correctly.
-    # This is the "Safety Net" if the pytests only call my function
+    # This is a "Safety Net" if the handin teams pytests only call my function
     adult = pd.read_csv(ADULT_CSV_PATH)
 
     adult_small = adult[['Education', 'Marital Status', 'Target']]
@@ -53,6 +198,7 @@ def generalize_categorical():
     
     #otherwise generalize "Married"/"Not Married"
     else:
+        not_married = ['Never-married', 'Divorced', 'Widowed']
         adult_small.loc[ adult_small['Marital Status'].isin(not_married), 'Marital Status'] = 'Not Married'
         adult_small.loc[ ~adult_small['Marital Status'].isin(['Not Married']), 'Marital Status'] = 'Married'
 
@@ -260,6 +406,9 @@ if __name__ == "__main__":
     '''
     #So I would say generalizing gen_zip = 4 and gen_age = 1 makes sense to get the best
     #tradeoff between utility and security
+
+    #Exercise 6
+
 
 
     
