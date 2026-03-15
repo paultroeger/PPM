@@ -106,8 +106,27 @@ def suppress_count(k, qis, df):
 
 def is_l_diverse(l, qis, sens_col, df, type='probabilistic'):
     # The type parameter has two valid values: 'probabilistic' and 'entropy'
-    # TODO: your code here
-    raise NotImplementedError()
+    # Group by QIs and look at the sensitive column
+    groups = df.groupby(qis)[sens_col]
+
+    for name, group in groups:
+        # value_counts(normalize=True) gives us the percentage of each value
+        counts = group.value_counts(normalize=True)
+        
+        if type == 'probabilistic':
+            # Check the highest probability (the most frequent value)
+            p_max = counts.max()
+            if p_max > (1/l):
+                return False
+                
+        elif type == 'entropy':
+            # Calculate entropy: -sum(p * log2(p))
+            probs = counts.values
+            entropy = -np.sum(probs * np.log2(probs))
+            if entropy < np.log2(l):
+                return False
+                
+    return True
 
 
 def max_l(qis, sens_col, df, type='probabilistic'):
@@ -222,7 +241,6 @@ if __name__ == "__main__":
     adult_ex4['Zip'] = adult_ex4['Zip'].apply(lambda zip: generalize_numeric(zip, gen_zip))
     adult_ex4['Age'] = adult_ex4['Age'].apply(lambda age: generalize_numeric(age, gen_age))
     #print(adult_ex4['Sex'].value_counts()) # Sex cant really be generalized further
-
     qis_ex4 = ['Zip', 'Sex', 'Age']
     print("For k = 3 we need to suppress " + str(suppress_count(3, qis_ex4, adult_ex4)) + " rows." ) 
     print("For k = 7 we need to suppress " + str(suppress_count(7, qis_ex4, adult_ex4)) + " rows." ) 
