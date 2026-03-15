@@ -155,9 +155,29 @@ def test_max_l():
     assert pytest.approx(2, 0.1) == l
     l = max_l(['qis'], 'sens_col', data, 'entropy')
     assert pytest.approx(2.8, 0.1) == l
+    # 1, 1
+    data = {
+        'qis': ['A', 'A'],
+        'sens_col' : ['A', 'B']
+    }
+    data = pd.DataFrame(data)
+    l = max_l(['qis'], 'sens_col', data)
+    assert pytest.approx(2, 0.1) == l
+    l = max_l(['qis'], 'sens_col', data, 'entropy')
+    assert pytest.approx(2, 0.1) == l
+    # 3, 2, 1
+    data = {
+        'qis': ['A', 'A', 'A', 'A', 'A', 'A'],
+        'sens_col' : ['A', 'A', 'A', 'A', 'B', 'C']
+    }
+    data = pd.DataFrame(data)
+    l = max_l(['qis'], 'sens_col', data)
+    assert pytest.approx(1.5, 0.1) == l
+    l = max_l(['qis'], 'sens_col', data, 'entropy')
+    assert pytest.approx(2.4, 0.1) == l
 
 #%%
 
 if __name__ == "__main__":
-    task6()
+    test_max_l()
     
