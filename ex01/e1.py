@@ -90,9 +90,9 @@ def generalize_numeric(val, n):
 
 
 #returns the number of rows you need to suppress to achieve a given k
-def suppress_count(k, qis, adult):
+def suppress_count(k, qis, df):
     #gives the number of people in each bucket
-    group_counts=adult[qis].value_counts()
+    group_counts=df[qis].value_counts()
 
     #filters for all the qis combinations (buckets) that violate k-anonymity,
     #listing the number of people that are in this bucket. 
@@ -212,6 +212,37 @@ if __name__ == "__main__":
     assert generalize_numeric(47401, 0) == 47401
     assert generalize_numeric(47401, 2) == 47400
     assert generalize_numeric(47401, 4) == 40000
+    
+
+    #Exercise 4
+    adult_ex4 = adult[['Zip', 'Sex', 'Age','Target']].copy()
+    
+    gen_zip = 2 #how many digits of zip to generalize
+    gen_age = 1 #how many digits of age to generalize
+    adult_ex4['Zip'] = adult_ex4['Zip'].apply(lambda zip: generalize_numeric(zip, gen_zip))
+    adult_ex4['Age'] = adult_ex4['Age'].apply(lambda age: generalize_numeric(age, gen_age))
+    #print(adult_ex4['Sex'].value_counts()) # Sex cant really be generalized further
+
+    qis_ex4 = ['Zip', 'Sex', 'Age']
+    print("For k = 3 we need to suppress " + str(suppress_count(3, qis_ex4, adult_ex4)) + " rows." ) 
+    print("For k = 7 we need to suppress " + str(suppress_count(7, qis_ex4, adult_ex4)) + " rows." ) 
+
+    '''
+    gen_zip = 2, gen_age = 1 
+    For k = 3 we need to suppress 7245 rows.
+    For k = 7 we need to suppress 24808 rows.
+
+    gen_zip = 3, gen_age = 1 
+    For k = 3 we need to suppress 255 rows.
+    For k = 7 we need to suppress 1143 rows.
+
+    gen_zip = 4, gen_age = 1 
+    For k = 3 we need to suppress 20 rows.
+    For k = 7 we need to suppress 79 rows.
+    '''
+    #So I would say generalizing gen_zip = 4 and gen_age = 1 makes sense to get the best
+    #tradeoff between utility and security
+
 
     
 
