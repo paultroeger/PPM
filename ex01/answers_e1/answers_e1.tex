@@ -1,0 +1,44 @@
+\documentclass{article}
+\usepackage{amsmath} % for mathematical symbols
+\usepackage{graphicx} % for including images
+
+\begin{document}
+	
+	\title{Answers \& Manual}
+	\author{Paul Tr\"oger}
+	
+	\maketitle
+	
+	\section{Answers}
+		\subsection{Task 1}
+			\textbf{Which columns of adult\_small are identifiers, which are quasi-identifiers, and which are sensitive attributes?}\\
+			\textbf{For which $k \in [1, 10]$ does adult\_small satisfy k-anonymity? For the cases that do not satisfy k-anonymity, why not?}\\
+		\subsection{Task 2}
+			\textbf{For which rows is a homogeneity attack possible, and why?}\\
+		\subsection{Task 4}
+			\textbf{How many rows would we have to suppress in addition to the generalization to achieve
+				k = 3 and k = 7?}\\
+			\textbf{How many digits of Zip and Age can/should you generalize, and how does this affect the
+				number of suppressed rows?}\\
+		\subsection{Task 6}
+			\textbf{Is the adult dataset $l$-diverse?}\\
+			\textbf{If not, which quasi-identifier groups are preventing $l$-diversity?}\\
+			\textbf{What is the difference between probabilistic and entropy $l$-diversity, if any?}\\
+		\subsection{Task 7}
+			\textbf{What is the largest $l$ for the generalized dataset for probabilistic $l$-diversity and entropy
+				$l$-diversity?}\\
+			\textbf{Discuss the difference between probabilistic $l$-diversity and entropy $l$-diversity. Why does
+				one of them appear more "diverse" than the other?}
+	
+	\section{Manual}
+		\subsection{Running the code}
+		All source code is self contained within a singular file called "e1.py".\\
+		Running the application can be achieved using \textit{python3 e1.py}.\\
+		This runs all the tasks and their respective outputs, Listing \ref{lst:python-output} shows the output of running the application normally.\\
+		There are also python tests defined within the application. These can be run using \textit{pytest -v e1.py}.\\
+		The flag "-v" is not mandatory, but improves clarity on what actually happened.\\
+		Running the tests with the aforementioned command results in an output similar to Listing \ref{lst:pytest-output}.
+		
+		\subsection{Test Cases}
+	
+\end{document}
