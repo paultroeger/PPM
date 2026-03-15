@@ -19,7 +19,7 @@ ADULT_CSV_PATH = r'C:\2.0\Privacy-Preserving Methods for Data Science and Distri
 
 
 
-# asserts that loading the dataset works
+# asserts that loading the dataset works. Must be tested to catch global variable issues with ADULT_CSV_PATH
 def test_load_dataset():
     # Execute the function to trigger internal loading
     df = generalize_categorical()
@@ -37,7 +37,10 @@ def test_load_dataset():
     # Verify data integrity (checking if 'Target' exists and is populated)
     assert df['Target'].notnull().any(), "Data values are missing or null"
 
-#assert that True is returned on the empty dataframe
+#assert that True is returned on the empty dataframe. Must be tested because the empty 
+#dataframe trivially is ∞-anonymous.since I can't overwrite the dataset and am not allowed
+#to change the function signature of generalize_categorical() I have to use code 
+#duplicates as workaround.
 def test_k_anonymous_emptydf():
     adult = pd.read_csv(ADULT_CSV_PATH)
     adult_small = adult[['Education', 'Marital Status', 'Target']]
@@ -46,7 +49,8 @@ def test_k_anonymous_emptydf():
 
     assert is_k_anonymous(1, qis, adult_small) == True
 
-#assert single entry dataframe is returned ruled as 1-anonymous
+#assert single entry dataframe is ruled as 1-anonymous (ruling out 2-anonymous). Must be
+#tested as edge case.
 def test_k_anonymous_onerowdf():
     adult = pd.read_csv(ADULT_CSV_PATH)
     adult_small = adult[['Education', 'Marital Status', 'Target']]
@@ -56,9 +60,8 @@ def test_k_anonymous_onerowdf():
     assert is_k_anonymous(1, qis, adult_small) == True
     assert is_k_anonymous(2, qis, adult_small) == False
 
-# asserts that generalize_categorical actually terminates immediately on the empty dataset
-# since I can't overwrite the dataset and am not allowed to change the funciton signature
-# of generalize_categorical() I have to use code duplicates as workaround.
+#asserts that generalize_categorical actually terminates immediately on the empty dataset.
+#Must be tested because its an edge case in the function.
 def test_generalize_categorical_emptydf():
     adult = pd.read_csv(ADULT_CSV_PATH)
 
@@ -74,22 +77,8 @@ def test_generalize_categorical_emptydf():
 
     assert flag == 'Dataset remains unchanged! I did nothing.'
 
-def test_generalize_categorical_emptydf():
-    adult = pd.read_csv(ADULT_CSV_PATH)
-
-    adult_small = adult[['Education', 'Marital Status', 'Target']]
-    adult_small = adult_small[0:0]
-    qis = ['Education', 'Marital Status']
-
-    # check 1-anonymity which should be true
-    if is_k_anonymous(1, qis, adult_small):
-        flag = 'Dataset remains unchanged! I did nothing.' # save flag to assert later
-    else:
-        assert 1==2 # should the if clause fail the test must fail
-
-    assert flag == 'Dataset remains unchanged! I did nothing.'
-
-#asserts that it actually achieves the 2-anonymity for our adult_small dataset.
+#asserts that it actually achieves the 2-anonymity for our adult_small dataset. Must be
+#tested because the goal of generalize_categorial() was to generalize adult_small in such a way that the dataset is 2-anonymous.
 def test_generalize_categorical_achieves_anonymity():
     # 1. Run the actual function on the actual adult.csv
     result = generalize_categorical()
@@ -100,8 +89,9 @@ def test_generalize_categorical_achieves_anonymity():
     
     assert is_safe == True, "The function failed to achieve 2-anonymity on the real data!"
 
-#asserts that the categories "Marital Status" and "EducatioN" have the correct
-#generalized entries and no entries were forgotten
+#asserts that the categories "Marital Status" and "Education" have the correct
+#generalized entries and no entries were forgotten. Must be tested because its possible i
+#missed entries in __main__
 def test_generalize_categorical_correct_column_entries():
 
     result = generalize_categorical()
@@ -125,7 +115,7 @@ def test_generalize_categorical_nothing_not_enough():
     qis = ['Education', 'Marital Status']
 
     assert (~ is_k_anonymous(2, qis, adult_small))
-
+#asserts generalizing just education is not enough for 2-anonymity.
 def test_generalize_categorical_education_not_enough():
     adult = pd.read_csv(ADULT_CSV_PATH)
 
@@ -140,6 +130,7 @@ def test_generalize_categorical_education_not_enough():
 
     assert (~ is_k_anonymous(2, qis, adult_small))
 
+#asserts generalizing both education and marital status achieves 2-anonymity.
 def test_generalize_categorical_education_and_marital_enough():
     adult = pd.read_csv(ADULT_CSV_PATH)
 
@@ -156,7 +147,12 @@ def test_generalize_categorical_education_and_marital_enough():
 
     assert (is_k_anonymous(2, qis, adult_small))
 
-
+# asserts that the generalize_numeric function generalizes numbers correctly by
+# overwriting digits. Must be tested cause the sheet said so.
+def test_generalize_numeric():
+    assert generalize_numeric(47401, 0) == 47401
+    assert generalize_numeric(47401, 2) == 47400
+    assert generalize_numeric(47401, 4) == 40000
 
 def is_k_anonymous(k, qis, df):
     """Returns true if df satisfies k-Anonymity for the quasi-identifiers 
@@ -213,6 +209,8 @@ def generalize_categorical():
         adult_small = adult_small.groupby(qis).filter(lambda x: len(x) >= 2)
         print('Education and Marital Status was generalized! I also suppressed some rows.')
         return adult_small
+
+
 
     
 
