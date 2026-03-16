@@ -4,6 +4,33 @@ import numpy as np
 from scipy import stats
 import pytest
 
+education_map = {
+    "11th": "Below HS",
+    "9th": "Below HS",
+    "7th-8th": "Below HS",
+    "5th-6th": "Below HS",
+    "10th": "Below HS",
+
+    "Bachelors": "Above HS",
+    "HS-grad": "Above HS",
+    "Masters": "Above HS",
+    "Some-college": "Above HS",
+    "Doctorate": "Above HS",
+    "Assoc-acdm": "Above HS",
+    "Assoc-voc": "Above HS",
+    "Prof-school": "Above HS"
+}
+
+marital_status_map = {
+    "Married-civ-spouse": "Married",
+    "Married-AF-spouse": "Married",
+    "Married-spouse-absent": "Married",
+
+    "Never-married": "Not Married",
+    "Divorced": "Not Married",
+    "Separated": "Not Married"
+}
+
 
 def is_k_anonymous(k, qis, df):
     """Returns true if df satisfies k-Anonymity for the quasi-identifiers
@@ -16,24 +43,14 @@ def is_k_anonymous(k, qis, df):
 
 
 def generalize_categorical(data):
-    data = data.copy()
-    below_hs = ['Preschool', '1st-4th', '5th-6th', '7th-8th', '9th', '10th', '11th', '12th']
-    hs_and_above = ['HS-grad', 'Some-college', 'Assoc-voc', 'Assoc-acdm', 'Bachelors', 'Prof-school', 'Masters',
-                    'Doctorate']
-    married = ['Married-civ-spouse', 'Married-AF-spouse', 'Married-spouse-absent']
-    not_married = ['Never-married', 'Separated', 'Divorced', 'Widowed']
-    for index, row in data.iterrows():
-        if row['Education'] in below_hs:
-            data.at[index, 'Education'] = '< HS'
-        elif row['Education'] in hs_and_above:
-            data.at[index, 'Education'] = '>= HS'
-        if row['Marital Status'] in married:
-            data.at[index, 'Marital Status'] = 'Married'
-        elif row['Marital Status'] in not_married:
-            data.at[index, 'Marital Status'] = 'Not Married'
+    df = data.copy()
 
-    group_sizes = data.groupby(['Education', 'Marital Status'])['Education'].transform('size')
-    df = data[group_sizes >= 2]
+    df["Education"] = df["Education"].map(education_map)
+    df["Marital Status"] = df["Marital Status"].map(marital_status_map)
+
+    # Suppression commented out for task 7
+    # group_sizes = data.groupby(['Education', 'Marital Status'])['Education'].transform('size')
+    # df = data[group_sizes >= 2]
 
     return df
 
@@ -53,16 +70,18 @@ def suppress_count(k, qis, df):
 
 def is_l_diverse(l, qis, sens_col, df, type='probabilistic'):
     # The type parameter has two valid values: 'probabilistic' and 'entropy'
+    if type not in {'probabilistic', 'entropy'}:
+        raise ValueError("type must be 'probabilistic' or 'entropy'")
+    if l <= 0:
+        raise ValueError("l must be > 0")
     groups = df.groupby(qis)
     for _, group in groups:
-        values = group[sens_col]
+        values = group[sens_col].value_counts(normalize=True)
         if type == 'probabilistic':
-            probs = values.value_counts(normalize=True)
-            if probs.max() > (1 / l):
+            if values.max() > (1 / l):
                 return False
         elif type == 'entropy':
-            probs = values.value_counts(normalize=True)
-            ent = stats.entropy(probs, base=2)
+            ent = stats.entropy(values, base=2)
             if ent < np.log2(l):
                 return False
     return True
@@ -81,25 +100,25 @@ if __name__ == "__main__":
     adult = pd.read_csv('adult_with_pii.csv')
     adult_small = adult[['Education', 'Marital Status', 'Target']][:100]
     # TASK 1
-    print(is_k_anonymous(1, ['Education', 'Marital Status', 'Target'], adult_small))
-    print(is_k_anonymous(2, ['Education', 'Marital Status', 'Target'], adult_small))
+    # print(is_k_anonymous(1, ['Education', 'Marital Status', 'Target'], adult_small))
+    # print(is_k_anonymous(2, ['Education', 'Marital Status', 'Target'], adult_small))
     # TASK 2
     adult_small_gen = generalize_categorical(adult_small)
-    print(adult_small_gen)
-    print(adult_small_gen.groupby(['Education', 'Marital Status', 'Target']).size())
+    # print(adult_small_gen)
+    # print(adult_small_gen.groupby(['Education', 'Marital Status', 'Target']).size())
     # TASK 3
     # See test_generalize_numeric
     # TASK 4
-    adult['Sex'] = "*"
-    adult['Age'] = adult['Age'].apply(lambda x: generalize_numeric(x, 1))
-    adult['Zip'] = adult['Zip'].apply(lambda x: generalize_numeric(x, 2))
-    print(suppress_count(3, ['Sex', 'Age', 'Zip'], adult))
+    # adult['Sex'] = "*"
+    # adult['Age'] = adult['Age'].apply(lambda x: generalize_numeric(x, 1))
+    # adult['Zip'] = adult['Zip'].apply(lambda x: generalize_numeric(x, 2))
+    # print(suppress_count(3, ['Sex', 'Age', 'Zip'], adult))
     # TASK 5
     print(is_l_diverse(1, ['Education', 'Marital Status', 'Sex'], 'DOB', adult, 'entropy'))
     # TASK 7
     print(max_l(['Education', 'Marital Status', 'Sex'], 'DOB', adult))
     adult_gen = generalize_categorical(adult)
-    print(max_l(['Education', 'Marital Status', 'Sex'], 'DOB', adult_gen))
+    print(max_l(['Education', 'Marital Status', 'Sex'], 'DOB', adult_gen, 'entropy'))
 
 
 def test_is_k_anonymous():
@@ -140,3 +159,25 @@ def test_suppress_count():
     })
     assert suppress_count(2, ["Sex", "Age", "Zip"], df) == 2
     assert suppress_count(3, ["Sex", "Age", "Zip"], df) == 4
+
+# Tests both probabilistic and entropy versions of is_l_diverse.
+# Test invalid type parameter and invalid l parameter.
+def test_is_l_diverse():
+    data = {
+        'qis': ['A', 'A', 'A', 'A', 'B', 'B', 'B', 'B', 'C', 'C', 'C', 'C'],
+        'sens_col': ['HD', 'VI', 'C', 'C', 'C', 'HD', 'VI', 'VI', 'HD', 'VI', 'C', 'C']
+    }
+    data = pd.DataFrame(data)
+
+    assert is_l_diverse(2, ['qis'], 'sens_col', data)
+    assert not is_l_diverse(2.1, ['qis'], 'sens_col', data)
+
+    assert is_l_diverse(2.8, ['qis'], 'sens_col', data, 'entropy')
+    assert not is_l_diverse(3, ['qis'], 'sens_col', data, 'entropy')
+    with pytest.raises(ValueError):
+        is_l_diverse(2, ['qis'], 'sens_col', data, 'invalid')
+    with pytest.raises(ValueError):
+        is_l_diverse(0, ['qis'], 'sens_col', data)
+    with pytest.raises(ValueError):
+        is_l_diverse(-1, ['qis'], 'sens_col', data)
+
