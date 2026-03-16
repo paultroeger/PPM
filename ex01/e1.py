@@ -222,8 +222,12 @@ def test_suppress_count_all_suppressed():
 def task1():
     print('-' * 6, 'Task 1', '-' * 6)
     data = get_adult_small()
+    qis = ['Education', 'Marital Status']
     for k in range(1, 11):
-        print(f'adult_small {k}-anonymous: {is_k_anonymous(k, ['Education', 'Marital Status'], data)}')
+        print(f'adult_small {k}-anonymous: {is_k_anonymous(k, qis, data)}')
+
+    group_counts = data[qis].value_counts()
+    print(group_counts)
     print()
 
 
@@ -231,6 +235,7 @@ def task2():
     print('-' * 6, 'Task 2', '-' * 6)
     data = generalize_categorical()
     print('Check for Homogenity attack:')
+    print(data.groupby(['Education', 'Marital Status']).value_counts())
     print(data.groupby(['Education', 'Marital Status'])['Target'].nunique())
     print()
 
@@ -244,13 +249,13 @@ def task4():
     qis = ['Zip', 'Sex', 'Age']
 
     print_info(k, n_zip, n_age, sup_sex, qis, generalize_full_adult(n_zip, n_age, sup_sex))
-    sup_sex = True
+    n_zip = 3
     print_info(k, n_zip, n_age, sup_sex, qis, generalize_full_adult(n_zip, n_age, sup_sex))
     
     k = 7
-    sup_sex = False
+    n_zip = 2
     print_info(k, n_zip, n_age, sup_sex, qis, generalize_full_adult(n_zip, n_age, sup_sex))
-    sup_sex = True
+    n_zip = 3
     print_info(k, n_zip, n_age, sup_sex, qis, generalize_full_adult(n_zip, n_age, sup_sex))
     print()
 
