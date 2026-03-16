@@ -148,6 +148,62 @@ def test_max_l():
     l = max_l(['qis'], 'sens_col', data, 'entropy')
     assert pytest.approx(2.4, 0.1) == l
 
+def test_suppress_count_no_suppression():
+    df = pd.DataFrame({
+        "Zip": [1, 1, 2, 2],
+        "Sex": ["M", "M", "F", "F"],
+        "Age": [30, 30, 40, 40]
+    })
+
+    assert suppress_count(2, ["Zip", "Sex", "Age"], df) == 0
+
+
+def test_suppress_count_some_suppression():
+    df = pd.DataFrame({
+        "Zip": [1, 1, 1, 2],
+        "Sex": ["M", "M", "M", "F"],
+        "Age": [30, 30, 30, 40]
+    })
+
+    # group (1,M,30) size 3
+    # group (2,F,40) size 1 -> suppressed
+    assert suppress_count(2, ["Zip", "Sex", "Age"], df) == 1
+
+
+def test_suppress_count_multiple_small_groups():
+    df = pd.DataFrame({
+        "Zip": [1, 2, 3],
+        "Sex": ["M", "M", "M"],
+        "Age": [30, 30, 30]
+    })
+
+    # three groups of size 1
+    assert suppress_count(2, ["Zip", "Sex", "Age"], df) == 3
+
+
+def test_suppress_count_exactly_k():
+    df = pd.DataFrame({
+        "Zip": [1, 1],
+        "Sex": ["M", "M"],
+        "Age": [30, 30]
+    })
+
+    # size == k should NOT be suppressed
+    assert suppress_count(2, ["Zip", "Sex", "Age"], df) == 0
+
+
+def test_suppress_count_all_suppressed():
+    df = pd.DataFrame({
+        "Zip": [1, 2],
+        "Sex": ["M", "F"],
+        "Age": [30, 40]
+    })
+
+    # two groups of size 1
+    assert suppress_count(2, ["Zip", "Sex", "Age"], df) == 2
+
+
+
 # Tasks
 def task1():
     print('-' * 6, 'Task 1', '-' * 6)
