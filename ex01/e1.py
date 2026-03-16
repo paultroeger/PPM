@@ -3,9 +3,11 @@ import numpy as np
 from scipy import stats
 import pytest
 
+ADULT_CSV_PATH = 'adult_with_pii.csv'
+
 # my functions
 def load_data():
-    return pd.read_csv('adult_with_pii.csv')
+    return pd.read_csv(ADULT_CSV_PATH)
 
 
 def get_adult_small():
@@ -36,24 +38,52 @@ def generalize_full_adult_task7():
     return data
 
 def print_info(k, n_zip, n_age, sup_sex,  qis, data):
-    print(f'k: {k}, n_zip: {n_zip}, n_age: {n_age}, sup_sex: {sup_sex} - Entries to supress: {suppress_count(k, qis, data)}/{len(data)}')
+    print(f'k: {k}, n_zip: {n_zip}, n_age: {n_age}, sup_sex: {sup_sex} - Entries to suppress: {suppress_count(k, qis, data)}/{len(data)}')
 
 
 # predefined functions
 def is_k_anonymous(k, qis, df):
     """Returns true if df satisfies k-Anonymity for the quasi-identifiers 
     qis. Returns false otherwise."""
+    if(len(df[qis]) == 0):
+        return True
     return df[qis].value_counts().min() >= k
 
 def test_is_k_anonymous():
+    qis = ['Education', 'Marital Status']
     data = {
         'Education': ['A', 'A', 'B'],
         'Marital Status': ['M', 'M', 'NM'],
         'Target': ['1', '1', '1']
     }
     data = pd.DataFrame(data)
-    np.testing.assert_array_equal(is_k_anonymous(1, ['Education', 'Marital Status'], data), True)
+    np.testing.assert_array_equal(is_k_anonymous(1, qis, data), True)
+    np.testing.assert_array_equal(is_k_anonymous(2, qis, data), False)
+    data = {
+        'Education': ['A', 'A', 'B', 'B'],
+        'Marital Status': ['M', 'M', 'NM', 'NM'],
+        'Target': ['1', '1', '1', '1']
+    }
+    data = pd.DataFrame(data)
+    np.testing.assert_array_equal(is_k_anonymous(2, qis, data), True)
+    np.testing.assert_array_equal(is_k_anonymous(3, qis, data), False)
 
+def test_k_anonymous_emptydf():
+    adult = pd.read_csv(ADULT_CSV_PATH)
+    adult_small = adult[['Education', 'Marital Status', 'Target']]
+    adult_small = adult_small[0:0]
+    qis = ['Education', 'Marital Status']
+
+    assert is_k_anonymous(1, qis, adult_small) == True
+
+def test_k_anonymous_onerowdf():
+    adult = pd.read_csv(ADULT_CSV_PATH)
+    adult_small = adult[['Education', 'Marital Status', 'Target']]
+    adult_small = adult_small[0:1]
+    qis = ['Education', 'Marital Status']
+    
+    assert is_k_anonymous(1, qis, adult_small) == True
+    assert is_k_anonymous(2, qis, adult_small) == False
 
 def generalize_categorical():
     data = load_data().head(100)[['Education', 'Education-Num', 'Marital Status', 'Target']]
@@ -65,6 +95,95 @@ def generalize_categorical():
     data.loc[~data['Marital Status'].isin(['Not Married', 'Never-married', 'Divorced', 'Separated' ]), 'Marital Status'] = 'Married'
     return data
 
+def test_load_dataset():
+    # Execute the function to trigger internal loading
+    df = generalize_categorical()
+
+    # Verify it returned a DataFrame
+    assert isinstance(df, pd.DataFrame), "Result is not a pandas DataFrame"
+
+    # Verify columns were correctly selected internally
+    expected_cols = ['Education', 'Marital Status', 'Target']
+    assert all(col in df.columns for col in expected_cols), "Column selection failed"
+
+    # Verify the internal slice [0:100] was applied
+    assert len(df) == 100, f"Expected 100 rows, but got {len(df)}"
+
+    # Verify data integrity (checking if 'Target' exists and is populated)
+    assert df['Target'].notnull().any(), "Data values are missing or null"
+
+def test_generalize_categorical_emptydf():
+    adult = pd.read_csv(ADULT_CSV_PATH)
+
+    adult_small = adult[['Education', 'Marital Status', 'Target']]
+    adult_small = adult_small[0:0]
+    qis = ['Education', 'Marital Status']
+
+    # check 1-anonymity which should be true
+    if is_k_anonymous(1, qis, adult_small):
+        flag = 'Dataset remains unchanged! I did nothing.' # save flag to assert later
+    else:
+        assert 1==2 # should the if clause fail the test must fail
+
+    assert flag == 'Dataset remains unchanged! I did nothing.'
+
+def test_generalize_categorical_achieves_anonymity():
+    # 1. Run the actual function on the actual adult.csv
+    result = generalize_categorical()
+
+    # 2. Check: Did it actually achieve 2-anonymity?
+    qis = ['Education', 'Marital Status']
+    is_safe = is_k_anonymous(2, qis, result)
+    
+    assert is_safe == True, "The function failed to achieve 2-anonymity on the real data!"
+
+def test_generalize_categorical_correct_column_entries():
+    result = generalize_categorical()
+    allowed_edu = {'<HS', '>=HS'}
+    actual_edu = set(result['Education'].unique())
+    assert actual_edu.issubset(allowed_edu), f"Found unexpected Education values: {actual_edu}"
+    allowed_marital = {'Married', 'Not Married'}
+    actual_marital = set(result['Marital Status'].unique())
+    assert actual_marital.issubset(allowed_marital), f"Found unexpected Marital Status values: {actual_marital}"
+
+def test_generalize_categorical_nothing_not_enough():
+    adult = pd.read_csv(ADULT_CSV_PATH)
+
+    adult_small = adult[['Education', 'Marital Status', 'Target']]
+    adult_small = adult_small[0:100]
+    qis = ['Education', 'Marital Status']
+
+    assert (~ is_k_anonymous(2, qis, adult_small))
+
+def test_generalize_categorical_education_not_enough():
+    adult = pd.read_csv(ADULT_CSV_PATH)
+
+    adult_small = adult[['Education', 'Marital Status', 'Target']]
+    adult_small = adult_small[0:100]
+    qis = ['Education', 'Marital Status']
+
+    #generalizes Education status
+    no_HSdegree = ['11th', '10th', '7th-8th', '9th', '12th', '5th-6th', '1st-4th', 'Preschool']
+    adult_small.loc[ adult_small['Education'].isin(no_HSdegree), 'Education'] = '< HS'
+    adult_small.loc[ ~adult_small['Education'].isin(['< HS']), 'Education'] = '>= HS'
+
+    assert (~ is_k_anonymous(2, qis, adult_small))
+
+def test_generalize_categorical_education_and_marital_enough():
+    adult = pd.read_csv(ADULT_CSV_PATH)
+
+    adult_small = adult[['Education', 'Marital Status', 'Target']]
+    adult_small = adult_small[0:100]
+    qis = ['Education', 'Marital Status']
+    no_HSdegree = ['11th', '10th', '7th-8th', '9th', '12th', '5th-6th', '1st-4th', 'Preschool']
+    adult_small.loc[ adult_small['Education'].isin(no_HSdegree), 'Education'] = '< HS'
+    adult_small.loc[ ~adult_small['Education'].isin(['< HS']), 'Education'] = '>= HS'
+
+    not_married = ['Never-married', 'Divorced', 'Widowed']
+    adult_small.loc[ adult_small['Marital Status'].isin(not_married), 'Marital Status'] = 'Not Married'
+    adult_small.loc[ ~adult_small['Marital Status'].isin(['Not Married']), 'Marital Status'] = 'Married'
+
+    assert (is_k_anonymous(2, qis, adult_small))
 
 def generalize_numeric(zip, n):
     if(n == 0):
@@ -83,6 +202,59 @@ def test_generalize_numeric():
 def suppress_count(k, qis, df):
     return (df[qis].value_counts() < k).sum()
 
+def test_suppress_count_no_suppression():
+    df = pd.DataFrame({
+        "Zip": [1, 1, 2, 2],
+        "Sex": ["M", "M", "F", "F"],
+        "Age": [30, 30, 40, 40]
+    })
+
+    assert suppress_count(2, ["Zip", "Sex", "Age"], df) == 0
+
+
+def test_suppress_count_some_suppression():
+    df = pd.DataFrame({
+        "Zip": [1, 1, 1, 2],
+        "Sex": ["M", "M", "M", "F"],
+        "Age": [30, 30, 30, 40]
+    })
+
+    # group (1,M,30) size 3
+    # group (2,F,40) size 1 -> suppressed
+    assert suppress_count(2, ["Zip", "Sex", "Age"], df) == 1
+
+
+def test_suppress_count_multiple_small_groups():
+    df = pd.DataFrame({
+        "Zip": [1, 2, 3],
+        "Sex": ["M", "M", "M"],
+        "Age": [30, 30, 30]
+    })
+
+    # three groups of size 1
+    assert suppress_count(2, ["Zip", "Sex", "Age"], df) == 3
+
+
+def test_suppress_count_exactly_k():
+    df = pd.DataFrame({
+        "Zip": [1, 1],
+        "Sex": ["M", "M"],
+        "Age": [30, 30]
+    })
+
+    # size == k should NOT be suppressed
+    assert suppress_count(2, ["Zip", "Sex", "Age"], df) == 0
+
+
+def test_suppress_count_all_suppressed():
+    df = pd.DataFrame({
+        "Zip": [1, 2],
+        "Sex": ["M", "F"],
+        "Age": [30, 40]
+    })
+
+    # two groups of size 1
+    assert suppress_count(2, ["Zip", "Sex", "Age"], df) == 2
 
 def is_l_diverse(l, qis, sens_col, df, type='probabilistic'):
     # The type parameter has two valid values: 'probabilistic' and 'entropy'
@@ -161,60 +333,6 @@ def test_max_l():
     assert pytest.approx(1.5, 0.1) == l
     l = max_l(['qis'], 'sens_col', data, 'entropy')
     assert pytest.approx(2.4, 0.1) == l
-
-def test_suppress_count_no_suppression():
-    df = pd.DataFrame({
-        "Zip": [1, 1, 2, 2],
-        "Sex": ["M", "M", "F", "F"],
-        "Age": [30, 30, 40, 40]
-    })
-
-    assert suppress_count(2, ["Zip", "Sex", "Age"], df) == 0
-
-
-def test_suppress_count_some_suppression():
-    df = pd.DataFrame({
-        "Zip": [1, 1, 1, 2],
-        "Sex": ["M", "M", "M", "F"],
-        "Age": [30, 30, 30, 40]
-    })
-
-    # group (1,M,30) size 3
-    # group (2,F,40) size 1 -> suppressed
-    assert suppress_count(2, ["Zip", "Sex", "Age"], df) == 1
-
-
-def test_suppress_count_multiple_small_groups():
-    df = pd.DataFrame({
-        "Zip": [1, 2, 3],
-        "Sex": ["M", "M", "M"],
-        "Age": [30, 30, 30]
-    })
-
-    # three groups of size 1
-    assert suppress_count(2, ["Zip", "Sex", "Age"], df) == 3
-
-
-def test_suppress_count_exactly_k():
-    df = pd.DataFrame({
-        "Zip": [1, 1],
-        "Sex": ["M", "M"],
-        "Age": [30, 30]
-    })
-
-    # size == k should NOT be suppressed
-    assert suppress_count(2, ["Zip", "Sex", "Age"], df) == 0
-
-
-def test_suppress_count_all_suppressed():
-    df = pd.DataFrame({
-        "Zip": [1, 2],
-        "Sex": ["M", "F"],
-        "Age": [30, 40]
-    })
-
-    # two groups of size 1
-    assert suppress_count(2, ["Zip", "Sex", "Age"], df) == 2
 
 
 
