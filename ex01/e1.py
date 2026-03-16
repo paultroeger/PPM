@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import scipy.stats
+from scipy import stats
 import pytest
 
 # my functions
@@ -86,16 +86,21 @@ def suppress_count(k, qis, df):
 
 def is_l_diverse(l, qis, sens_col, df, type='probabilistic'):
     # The type parameter has two valid values: 'probabilistic' and 'entropy'
-    group_probability = df.groupby(qis)[sens_col].value_counts(normalize=True)
-    match type:
-        case 'probabilistic':
-            return group_probability.max() <= 1/l
-        case 'entropy':
-            entropy = -(group_probability * np.log2(group_probability))
-            entropy = entropy.groupby(qis).sum()
-            return entropy.min() >= np.log2(l)
-        case _:
-            raise Error()
+    if type not in {'probabilistic', 'entropy'}:
+        raise ValueError("type must be 'probabilistic' or 'entropy'")
+    if l <= 0:
+        raise ValueError("l must be > 0")
+    groups = df.groupby(qis)
+    for _, group in groups:
+        values = group[sens_col].value_counts(normalize=True)
+        if type == 'probabilistic':
+            if values.max() > (1 / l):
+                return False
+        elif type == 'entropy':
+            ent = stats.entropy(values, base=2)
+            if ent < np.log2(l):
+                return False
+    return True
 
 def test_is_l_diverse():
     # data from lecture slides
@@ -104,11 +109,20 @@ def test_is_l_diverse():
         'sens_col': ['HD', 'VI', 'C', 'C', 'C', 'HD', 'VI', 'VI', 'HD', 'VI', 'C', 'C']
     }
     data = pd.DataFrame(data)
-    assert is_l_diverse(2, ['qis'], 'sens_col', data)
-    assert ~is_l_diverse(2.1, ['qis'], 'sens_col', data)
 
+    # probabilistic version
+    assert is_l_diverse(2, ['qis'], 'sens_col', data)
+    assert not is_l_diverse(2.1, ['qis'], 'sens_col', data)
+
+    # entropy version
     assert is_l_diverse(2.8, ['qis'], 'sens_col', data, 'entropy')
-    assert ~is_l_diverse(3, ['qis'], 'sens_col', data, 'entropy')
+    assert not is_l_diverse(3, ['qis'], 'sens_col', data, 'entropy')
+    # test invalid type
+    with pytest.raises(ValueError):
+        is_l_diverse(2, ['qis'], 'sens_col', data, 'invalid')
+    # test invalid l
+    with pytest.raises(ValueError):
+        is_l_diverse(0, ['qis'], 'sens_col', data)
 
 def max_l(qis, sens_col, df, type='probabilistic'):
     l = 0.1
