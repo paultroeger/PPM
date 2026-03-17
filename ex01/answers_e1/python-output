@@ -1,0 +1,96 @@
+------ Task 1 ------
+adult_small 1-anonymous: True
+adult_small 2-anonymous: False
+adult_small 3-anonymous: False
+adult_small 4-anonymous: False
+adult_small 5-anonymous: False
+adult_small 6-anonymous: False
+adult_small 7-anonymous: False
+adult_small 8-anonymous: False
+adult_small 9-anonymous: False
+adult_small 10-anonymous: False
+Education     Marital Status       
+Bachelors     Married-civ-spouse       12
+HS-grad       Married-civ-spouse       12
+Some-college  Married-civ-spouse       10
+HS-grad       Never-married             8
+              Divorced                  6
+Some-college  Never-married             6
+Assoc-voc     Married-civ-spouse        4
+Some-college  Divorced                  4
+11th          Married-civ-spouse        3
+Doctorate     Married-civ-spouse        3
+Bachelors     Never-married             2
+Masters       Married-civ-spouse        2
+Assoc-acdm    Never-married             2
+7th-8th       Married-civ-spouse        2
+Masters       Divorced                  2
+HS-grad       Separated                 2
+9th           Married-civ-spouse        2
+Bachelors     Divorced                  2
+11th          Never-married             2
+Assoc-acdm    Married-civ-spouse        2
+9th           Married-spouse-absent     1
+Masters       Never-married             1
+HS-grad       Married-AF-spouse         1
+Assoc-voc     Never-married             1
+Prof-school   Married-civ-spouse        1
+5th-6th       Married-civ-spouse        1
+7th-8th       Married-spouse-absent     1
+Bachelors     Separated                 1
+10th          Married-civ-spouse        1
+9th           Never-married             1
+Doctorate     Never-married             1
+Assoc-acdm    Divorced                  1
+Name: count, dtype: int64
+
+------ Task 2 ------
+Check for Homogenity attack:
+Education  Marital Status  Target
+<HS        Married         <=50K     11
+           Not Married     <=50K      3
+>=HS       Married         <=50K     27
+                           >50K      20
+           Not Married     <=50K     34
+                           >50K       5
+Name: count, dtype: int64
+Education  Marital Status
+<HS        Married           1
+           Not Married       1
+>=HS       Married           2
+           Not Married       2
+Name: Target, dtype: int64
+
+------ Task 4 ------
+k: 3, n_zip: 2, n_age: 1, sup_sex: False - Entries to suppress: 5150/32561
+k: 3, n_zip: 3, n_age: 1, sup_sex: False - Entries to suppress: 199/32561
+k: 7, n_zip: 2, n_age: 1, sup_sex: False - Entries to suppress: 9386/32561
+k: 7, n_zip: 3, n_age: 1, sup_sex: False - Entries to suppress: 397/32561
+
+------ Task 6 ------
+Is 2-div prob: False
+Is 2-div entr: False
+With qis = ['Education', 'Sex']
+Is 2-div prob: True
+Is 2-div entr: True
+With qis = ['Marital Status', 'Sex']
+Is 2-div prob: True
+Is 2-div entr: True
+With qis = ['Education', 'Sex']
+Is 2-div prob: True
+Is 2-div entr: True
+
+------ Task 7 ------
+Max l with prob. 1.0144339197113217
+Max l with entr. 1.0774895025229903
+Education  Marital Status  Target
+<HS        Married         <=50K      1792
+                           >50K        212
+           Not Married     <=50K      2217
+                           >50K         32
+>=HS       Married         <=50K      7797
+                           >50K       6609
+           Not Married     <=50K     12914
+                           >50K        988
+Name: count, dtype: int64
+

@@ -1,11 +1,12 @@
 \documentclass{article}
 \usepackage{amsmath} % for mathematical symbols
 \usepackage{graphicx} % for including images
+\usepackage{listings}
 
 \begin{document}
 	
-	\title{Answers \& Manual}
-	\author{Paul Tr\"oger}
+	\title{Ex01 \\ Answers \& Manual}
+	\author{Paul Tr\"oger, Fynn Gohlke, Tom Rodewald, Jan B\"uchele}
 	
 	\maketitle
 	
@@ -40,9 +41,12 @@
 		\subsection{Task 7}
 			\textbf{What is the largest $l$ for the generalized dataset for probabilistic $l$-diversity and entropy
 				$l$-diversity?}\\
-				For both values it's ~1.1. See output.
-			\textbf{Discuss the difference between probabilistic $l$-diversity and entropy $l$-diversity. Why does
-				one of them appear more "diverse" than the other?}
+				For the probabilistic method $l$ is 1.0144339197113217.\\
+				For the entropy methods $l$ is 1.0774895025229903.\\
+			\textbf{Discuss the difference between probabilistic $l$-diversity and entropy $l$-diversity. Why does one of them appear more "diverse" than the other?}\\
+				The diversity is limited by the "$<$HS", "Not Married" group where the large majority of people make less that 50k.
+				The probabilistic method only looks at the most frequent value while entropy also awards some diversity points for the tiny set of people who make above 50k.
+				
 	
 	\section{Manual}
 		\subsection{Running the code}
@@ -82,4 +86,9 @@
 		\subsubsection{Task 7 Tests}
 			$test\_max\_l()$ is used to test the example cases seen on the slides in the lecture.
 	
+		\section{Appendix}
+			\subsection{Python-output}\label{lst:python-output}
+				\lstinputlisting{python-output}
+			\subsection{Pytest-output}
+				\lstinputlisting{pytest-output}\label{lst:pytest-output}
 \end{document}

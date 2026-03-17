@@ -1,3 +1,4 @@
+#%%
 import pandas as pd
 import numpy as np
 from scipy import stats
@@ -297,10 +298,16 @@ def test_is_l_diverse():
         is_l_diverse(0, ['qis'], 'sens_col', data)
 
 def max_l(qis, sens_col, df, type='probabilistic'):
-    l = 0.1
-    while(is_l_diverse(l, qis, sens_col, df, type)):
-        l += 0.1
-    return l
+    if type not in {'probabilistic', 'entropy'}:
+        raise ValueError("type must be 'probabilistic' or 'entropy'")
+    group_probability = df.groupby(qis)[sens_col].value_counts(normalize=True)
+    match type:
+        case 'probabilistic':
+            return 1/group_probability.max()
+        case 'entropy':
+            entropy = -(group_probability * np.log2(group_probability))
+            entropy = entropy.groupby(qis).sum()
+            return np.pow(2, entropy.min())
 
 def test_max_l():
     # data from lecture slides
@@ -310,9 +317,9 @@ def test_max_l():
     }
     data = pd.DataFrame(data)
     l = max_l(['qis'], 'sens_col', data)
-    assert pytest.approx(2, 0.1) == l
+    assert pytest.approx(2, 0.05) == l
     l = max_l(['qis'], 'sens_col', data, 'entropy')
-    assert pytest.approx(2.8, 0.1) == l
+    assert pytest.approx(2.8, 0.05) == l
     # 1, 1
     data = {
         'qis': ['A', 'A'],
@@ -413,8 +420,10 @@ def task7():
     print(f"Max l with prob. {l}")
     l = max_l(qis, sens_col, data, 'entropy')
     print(f"Max l with entr. {l}")
+    print(data.groupby(qis).value_counts())
     print()
 
+# %%
 if __name__ == "__main__":
     task1()
     task2()
