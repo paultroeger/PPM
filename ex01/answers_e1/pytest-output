@@ -1,0 +1,25 @@
+=================== test session starts ====================
+platform linux -- Python 3.14.3, pytest-9.0.2, pluggy-1.5.0 
+cachedir: .pytest_cache
+collecting ... collected 18 items
+
+e1.py::test_is_k_anonymous PASSED                                        [  5%]
+e1.py::test_k_anonymous_emptydf PASSED                                   [ 11%]
+e1.py::test_k_anonymous_onerowdf PASSED                                  [ 16%]
+e1.py::test_load_dataset PASSED                                          [ 22%]
+e1.py::test_generalize_categorical_emptydf PASSED                        [ 27%]
+e1.py::test_generalize_categorical_achieves_anonymity PASSED             [ 33%]
+e1.py::test_generalize_categorical_correct_column_entries PASSED         [ 38%]
+e1.py::test_generalize_categorical_nothing_not_enough PASSED             [ 44%]
+e1.py::test_generalize_categorical_education_not_enough PASSED           [ 50%]
+e1.py::test_generalize_categorical_education_and_marital_enough PASSED   [ 55%]
+e1.py::test_generalize_numeric PASSED                                    [ 61%]
+e1.py::test_suppress_count_no_suppression PASSED                         [ 66%]
+e1.py::test_suppress_count_some_suppression PASSED                       [ 72%]
+e1.py::test_suppress_count_multiple_small_groups PASSED                  [ 77%]
+e1.py::test_suppress_count_exactly_k PASSED                              [ 83%]
+e1.py::test_suppress_count_all_suppressed PASSED                         [ 88%]
+e1.py::test_is_l_diverse PASSED                                          [ 94%]
+e1.py::test_max_l PASSED                                                 [100%]
+
+==================== 18 passed in 1.03s ====================
