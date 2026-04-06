@@ -130,14 +130,19 @@ def task2():
     print()
 
 def task3():
-    pass
+    print('-' * 6, 'Task 3', '-' * 6)
+    print()
 
 def task4():
+    print('-' * 6, 'Task 4', '-' * 6)
     occ_data = load_data()['NAICS_21']
     alpha = 0.05
     encoded = occ_data.apply(encode_response_sales, alpha=alpha)
     decoded = decode_responses_sales(encoded, alpha)
     print(decoded)
+    print(f"Decoded Value: {decoded.iloc[12]}")
+    print(f"Actual Value: {len(occ_data[occ_data == 12])}")
+    print()
 
 
 # %%

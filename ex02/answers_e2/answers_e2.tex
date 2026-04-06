@@ -1,0 +1,57 @@
+\documentclass{article}
+\usepackage{amsmath} % for mathematical symbols
+\usepackage{graphicx} % for including images
+\usepackage{listings}
+
+\usepackage[a4paper, total={6in, 7in}]{geometry}
+
+\begin{document}
+	
+	\title{Ex02 \\ Answers \& Manual}
+	\author{Paul Tr\"oger, Fynn Gohlke, Tom Rodewald, Jan B\"uchele}
+	
+	\maketitle
+	
+	\section{Answers}
+		\subsection{Differentially private averages}
+			We used the clipping parameter of 230 CAD. The sensitivity of the hourly wage field is theoretically unbounded. To find a usable clipping value we had to use a differentially private queries. We split the total epsilon budget into 5 parts and used 4 of these parts to query the dataset about how many people make above a certain value. After reviewing the results of the query we decided that the maximum wages in the set must be between 200 and 250 CAD.
+		\subsection{L1 and L2 sensitivity}
+		Calculating the L1 sensitivity for of hrs\_cdf as the biggest impact one entry added or removed can have.
+		Assuming we add/remove a person that works 0 hours a week every bucket is impacted.
+		\begin{equation*}
+			||V||_1 = \sum_{i=1}^{k} |V_i| =  \sum_{i=1}^{990} 1 = 990
+		\end{equation*}
+		For the L2 sensitivity
+		\begin{equation*}
+			||V||_2 = \sqrt{\sum_{i=1}^{k} V^2_i }=  \sqrt{\sum_{i=1}^{990} 1^2} = \sqrt{990} = 31.46
+		\end{equation*}
+		\subsection{Renyi differential privacy}
+		
+		\subsection{Randomized response}
+		The actual value of individuals with "Professional occupations in engineering" is 3150. Our decoded value is 3171.  Which is very accurate.
+	
+	\section{Manual}
+		\subsection{Running the code}
+		All source code is self contained within a singular file called "e2.py".\\
+		Running the application can be achieved using \textit{python3 e2.py}.\\
+		This runs all the tasks and their respective outputs, Listing \ref{lst:python-output} shows the output of running the application normally.\\
+		There are also python tests defined within the application. These can be run using \textit{pytest -v e2.py}.\\
+		The flag "-v" is not mandatory, but improves clarity on what actually happened.\\
+		Running the tests with the aforementioned command results in an output similar to Listing \ref{lst:pytest-output}.
+		
+		\subsection{Test Cases}
+	
+		\subsubsection{Task 1 Tests}
+			
+		\subsubsection{Task 2 Tests}
+		
+		\subsubsection{Task 3 Tests}
+			
+		\subsubsection{Task 4 Tests}
+	
+		\section{Appendix}
+			\subsection{Python-output}\label{lst:python-output}
+				\lstinputlisting{python-output}
+			\subsection{Pytest-output}
+				\lstinputlisting{pytest-output}\label{lst:pytest-output}
+\end{document}
