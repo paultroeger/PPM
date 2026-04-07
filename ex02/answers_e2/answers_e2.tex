@@ -51,9 +51,12 @@
 		\subsubsection{Task 1 Tests}
 			
 		\subsubsection{Task 2 Tests}
-		
+			We verify that laplace\_mech adds noise and centers around the value. We test the length of the cdf functions return values.
+			We verify that the differentially private cdf returns the same shape and is noisy.
+			We test the accuracy by using a very high privacy budget (epsilon = 10,000). At this level, the Laplace noise becomes negligible (scale ~ 0), allowing us to verify that the underlying calculation logic—clipping, summing, and dividing—correctly matches the actual mean of the dataset.
 		\subsubsection{Task 3 Tests}
-			
+			For the rdp function we test the shape, and different alpha values.
+			For the convert function we test if for a large alpha epsilon is larger than epsilon bar and for a small alpha if epsilon is still larger than 0.
 		\subsubsection{Task 4 Tests}
 		We tested basic encoding without flipping by setting alpha to 0. We tested flipping by setting alpha to 1. We also tested the edge case of not a number values. For the decoding we tested via dummy set.
 	
