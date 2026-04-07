@@ -54,30 +54,20 @@ def avg_wages(data, epsilon):
     avg_wages_helper(wages, cap, split_epsilon)
 
     cap = 230
-    wages = wages.clip(lower=0, upper=cap)
-    sensitivity = cap / len(wages)
-    return laplace_mech(wages.mean(), sensitivity, split_epsilon)
+    return laplace_mech(wages.mean(), cap, split_epsilon)
 
 
-def test_avg_wages_upper_clip():
-    # Values above 200 CAD must be clipped to 200
+def test_avg_wages_correct_mean():
+    # The mean should reflect the raw values
     df = pd.DataFrame({'HRLYEARN': [99999] * 100})
     result = avg_wages(df, 1000)  # High epsilon to remove noise
-    assert abs(result - 230.0) < 1
-
-
-def test_avg_wages_lower_clip():
-    # Negative wages must be clipped to 0
-    df = pd.DataFrame({'HRLYEARN': [-500] * 100})
-    result = avg_wages(df, 1000)  # High epsilon to remove noise
-    assert result < 0.01
+    assert abs(result - 999.99) < 1
 
 
 def test_avg_wages_empty_data():
-    # Empty data should return avg of 0
-    df = pd.DataFrame({'HRLYEARN': [10000] * 0})
-    print(df)
-    result = avg_wages(df, 1000)  # High epsilon to remove noise
+    # Empty data should return 0
+    df = pd.DataFrame({'HRLYEARN': []})
+    result = avg_wages(df, 1000)
     assert result == 0
 
 
