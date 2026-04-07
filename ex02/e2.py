@@ -31,23 +31,39 @@ def test_laplace_mech_zero_sensitivity_zero_epsilon():
     assert result2 == 7.0
 
 
+# prints info about wages
+def avg_wages_helper(wages, cap, epsilon):
+    value = laplace_mech(wages[wages > cap].count(), 1, epsilon)
+    print(f"How many people earn above {cap}? {value}")
+
+
 def avg_wages(data, epsilon):
-    # HRLYEARN is given with two decimals, therefore, 7900 is 79.00 CAD
-    if data.empty: return 0
-    upper_bound = 200.0  # The average wage is around 35 CAD, therefore, 200 is a good upper bound
-    wages = data['HRLYEARN'].dropna() / 100
-    wages = wages.clip(lower=0, upper=upper_bound)
-    avg = wages.mean()  # This is 35.49 CAD
-    n = len(wages)
-    sensitivity = upper_bound / n
-    return laplace_mech(avg, sensitivity, epsilon)
+    # 4 parts for finding sensitivity, 1 part for query
+    split_epsilon = epsilon / 5
+    # use only wages and remove implied decimal
+    wages = data['HRLYEARN'] / 100
+    if wages.empty: return 0
+
+    cap = 50
+    avg_wages_helper(wages, cap, split_epsilon)
+    cap = 100
+    avg_wages_helper(wages, cap, split_epsilon)
+    cap = 200
+    avg_wages_helper(wages, cap, split_epsilon)
+    cap = 250
+    avg_wages_helper(wages, cap, split_epsilon)
+
+    cap = 230
+    wages = wages.clip(lower=0, upper=cap)
+    sensitivity = cap / len(wages)
+    return laplace_mech(wages.mean(), sensitivity, split_epsilon)
 
 
 def test_avg_wages_upper_clip():
     # Values above 200 CAD must be clipped to 200
     df = pd.DataFrame({'HRLYEARN': [99999] * 100})
     result = avg_wages(df, 1000)  # High epsilon to remove noise
-    assert abs(result - 200.0) < 0.01
+    assert abs(result - 230.0) < 1
 
 
 def test_avg_wages_lower_clip():
@@ -148,10 +164,10 @@ def task1():
 # fewer counts.
 def task2():
     df = pd.read_csv('2025-02-CSV/pub0225.csv')
-    #print("Laplace: \n")
-    #print(hrs_cdf_dp_laplace(df, 1), "\n")
-    #print("Gauss: \n")
-    #print(hrs_cdf_dp_gauss(df, 1, 1e-11), "\n")
+    # print("Laplace: \n")
+    # print(hrs_cdf_dp_laplace(df, 1), "\n")
+    # print("Gauss: \n")
+    # print(hrs_cdf_dp_gauss(df, 1, 1e-11), "\n")
     print("Laplace v2: \n")
     print(hrs_cdf_v2(df, 1), "\n")
 
