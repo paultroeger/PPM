@@ -17,19 +17,19 @@ CSV_PATH = 'pub0225.csv'
 def load_data():
     return pd.read_csv(CSV_PATH)
 
-# prints info about wages
+# prints count of wages above the cap
 def avg_wages_helper(wages, cap, epsilon):
     value = laplace_mech(wages[wages > cap].count(), 1, epsilon)
     print(f"How many people earn above {cap}? {value}")
         
 
-# predefined functions
-
+# returns noisy query result according to laplace mechanism result = true_answer + Lap(b) with b = Δf/eps
 def laplace_mech(v, sensitivity, epsilon):
     scale = sensitivity / epsilon
     return v + np.random.laplace(0, scale)
 
-
+# returns the noisy average wage with a privacy budget of epsilon. We successively probed for the most sensible clipping parameter to decrease sensitivity
+# and thus improve utility
 def avg_wages(data, epsilon):
     # 4 parts for finding sensitivity, 1 part for query
     split_epsilon = epsilon / 5
@@ -48,19 +48,19 @@ def avg_wages(data, epsilon):
     cap = 230
     return laplace_mech(wages.mean(), cap, split_epsilon)
 
-
+# returns a vector with 990 entries (buckets). The i-th bucket contains the number of people who worked <i ATOTHRS (actual total hours)
 def hrs_cdf(lfs):
   a = lfs['ATOTHRS']
   return [len(a[a < i]) for i in range(990)]
 
-
+# returns a eps-DP result of the hrs_cdf function using the laplace mechanism
 def hrs_cdf_dp_laplace(lfs, epsilon):
     cdf = np.array(hrs_cdf(lfs))
     sensitivity = 990
     scale = sensitivity / epsilon
     return cdf + np.random.laplace(0, scale, len(cdf))
 
-
+# returns a eps-delta-DP result of the hrs_cdf function using the gaussian mechanism
 def hrs_cdf_dp_gauss(lfs, epsilon, delta):
     cdf = np.array(hrs_cdf(lfs))
     sensitivity = np.sqrt(990)
