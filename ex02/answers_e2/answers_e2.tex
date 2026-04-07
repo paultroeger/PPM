@@ -14,19 +14,26 @@
 	
 	\section{Answers}
 		\subsection{Differentially private averages}
-			We used the clipping parameter of 230 CAD. The sensitivity of the hourly wage field is theoretically unbounded. To find a usable clipping value we had to use a differentially private queries. We split the total epsilon budget into 5 parts and used 4 of these parts to query the dataset about how many people make above a certain value. After reviewing the results of the query we decided that the maximum wages in the set must be between 200 and 250 CAD.
+			We used the clipping parameter of 230 CAD. The sensitivity of the hourly wage field is theoretically unbounded. To find a usable clipping value we had to use differentially private queries. We split the total epsilon budget into 5 parts and used 4 of these parts to query the dataset about how many people make above a certain value. After reviewing the results of the query we decided that the maximum wages in the set must be between 200 and 250 CAD.
 		\subsection{L1 and L2 sensitivity}
-		Calculating the L1 sensitivity for of hrs\_cdf as the biggest impact one entry added or removed can have.
-		Assuming we add/remove a person that works 0 hours a week every bucket is impacted.
+		To calculate the sensitivity we need to look at how much of an impact one entry has on the vector.
+		Assuming we add/remove a person that works 0 hours a week every bucket is impacted by 1.
+		Putting this into the L1 equation we get:
 		\begin{equation*}
 			||V||_1 = \sum_{i=1}^{k} |V_i| =  \sum_{i=1}^{990} 1 = 990
 		\end{equation*}
-		For the L2 sensitivity
+		And for the L2 sensitivity:
 		\begin{equation*}
 			||V||_2 = \sqrt{\sum_{i=1}^{k} V^2_i }=  \sqrt{\sum_{i=1}^{990} 1^2} = \sqrt{990} = 31.46
 		\end{equation*}
+		The L2 sensitivity is expectantly much smaller than L1 which is why we should prefer gauss for greater query accuracy.
+		To determine $\delta$ we used the guideline from slide 28 of the Differential Privacy I lecture: "less than $1/n^2$".
+		We used $0.9 * 1/113780^2 = 6.95 * 10^{-11}$ for delta.\\
+		As mentioned before the utility of the Gauss mechanism is much higher than for the Laplace mechanism because we can use a lower sensitivity.
+		The privacy for Laplace however is better. The gauss mechanism losses the privacy guarantee with probability delta. We do not have such a delta with Laplace.\\
+		Using hrs\_cdf\_v2 instead of hrs\_cdf increases the utility by decreasing the vector size, which impacts the sensitivity. The k used in the above equations would be 99 instead of 990. It doesn't have a direct impact on privacy but one could argue that larger buckets makes re-identification harder.
 		\subsection{Renyi differential privacy}
-		
+		The total privacy cost can only be calculated with a selected delta. Assuming $\delta = 10^{-5}$ we can use convert\_RDP\_ED to get an $\epsilon$ cost of 2.879.
 		\subsection{Randomized response}
 		The actual value of individuals with "Professional occupations in engineering" is 3150. Our decoded value is 3171.  Which is very accurate.
 	

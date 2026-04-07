@@ -69,15 +69,18 @@ def hrs_cdf_dp_gauss(lfs, epsilon, delta):
     return cdf + np.random.normal(0, scale, len(cdf))
 
 
-def hrs_cdf_v2(lfs, epsilon):
-    pass
+def hrs_cdf_v2(lfs):
+    a = lfs['ATOTHRS'] // 10
+    return [len(a[a < i]) for i in range(99)]
 
 
 def rdp_mech(alpha):
+    df = hrs_cdf(load_data())
     epsilon_bar = 0.001
+    sensitivity = 112
     scale = np.pow(sensitivity, 2) * alpha
     scale /= 2 * epsilon_bar
-    return np.random.normal(0, scale)
+    return df + np.random.normal(0, scale, len(df))
 
 
 def convert_RDP_ED(alpha, epsilon_bar, delta):
@@ -87,7 +90,7 @@ def convert_RDP_ED(alpha, epsilon_bar, delta):
 
 
 def encode_response_sales(response, alpha):
-    one_hot = [0] * 22
+    one_hot = [0] * 44
     if(np.isnan(response)):
         one_hot[0] = 1
     else:
@@ -119,23 +122,31 @@ def task1():
 def task2():
     print('-' * 6, 'Task 2', '-' * 6)
     df = load_data()
-    cdf_dp = hrs_cdf_dp_laplace(df, 1)
-    print("cdf_dp:")
-    print(cdf_dp)
+    cdf = hrs_cdf(df)
+    cdf_dp_laplace = hrs_cdf_dp_laplace(df, 1)
+    
+    delta = 0.9 * (1/np.pow(len(df), 2))
+    cdf_dp_gauss = hrs_cdf_dp_gauss(df, 1, delta)
+    
+    total_diff_laplace = np.sum(np.abs(cdf-cdf_dp_laplace))
+    print(f"Total diff laplace : {total_diff_laplace}")
+    total_diff_gauss = np.sum(np.abs(cdf-cdf_dp_gauss))
+    print(f"Total diff gauss : {total_diff_gauss}")
 
-    cdf_gauss = hrs_cdf_dp_gauss(df, 1, 0.0001)
-    print("cdf_gauss:")
-    print(cdf_gauss)
-
+    print("cdf_v2:")
+    print(hrs_cdf_v2(df), "\n")
     print()
 
 def task3():
     print('-' * 6, 'Task 3', '-' * 6)
+    df = load_data()['ATOTHRS']
+    rdp_mech(5)
+    print(f"ED: {convert_RDP_ED(5, 0.001, 10**(-5))}")
     print()
 
 def task4():
     print('-' * 6, 'Task 4', '-' * 6)
-    occ_data = load_data()['NAICS_21']
+    occ_data = load_data()['NOC_43']
     alpha = 0.05
     encoded = occ_data.apply(encode_response_sales, alpha=alpha)
     decoded = decode_responses_sales(encoded, alpha)
@@ -147,7 +158,9 @@ def task4():
 
 # %%
 if __name__ == "__main__":
+    task1()
+    task2()
+    task3()
     task4()
-    
 
 # %%
