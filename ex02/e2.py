@@ -66,7 +66,7 @@ def hrs_cdf_dp_gauss(lfs, epsilon, delta):
     sensitivity = np.sqrt(990)
     scale = 2 * np.pow(sensitivity, 2) * np.log(1.25/delta)
     scale /= np.pow(epsilon, 2)
-    return cdf + np.random.normal(0, scale, len(cdf))
+    return cdf + np.random.normal(0, np.sqrt(scale), len(cdf))
 
 
 def hrs_cdf_v2(lfs):
@@ -110,6 +110,43 @@ def decode_responses_sales(responses, alpha):
     p, q = 1 - alpha, alpha
     return (sum_res - len(responses) * q) / (p - q)
 
+#Tests T1
+def test_encode_response_sales_no_flip():
+    # alpha = 0 to prevent flipping bits
+    alpha = 0
+    one_hot = encode_response_sales(12, alpha)
+    compare_one_hot = [0] * 44
+    compare_one_hot[12] = 1
+    assert((one_hot == pd.Series(compare_one_hot)).all())
+
+def test_encode_response_sales_flip():
+    # alpha = 1 force bit flip
+    alpha = 1
+    one_hot = encode_response_sales(12, alpha)
+    compare_one_hot = [1] * 44
+    compare_one_hot[12] = 0
+    assert((one_hot == pd.Series(compare_one_hot)).all())
+
+def test_encode_response_sales_nan():
+    # check if nan is covered
+    alpha = 0
+    one_hot = encode_response_sales(np.nan, alpha)
+    compare_one_hot = [0] * 44
+    compare_one_hot[0] = 1
+    assert((one_hot == pd.Series(compare_one_hot)).all())
+
+def test_decode_responses_sales():
+    alpha = 0
+    occ_data = pd.DataFrame({'NOC_43' : [12, 12, 12, 1, 1, np.nan]})['NOC_43']
+    encoded = occ_data.apply(encode_response_sales, alpha=alpha)
+    decoded = decode_responses_sales(encoded, alpha)
+    assert(decoded[0] == 1)
+    assert(decoded[1] == 2)
+    assert(decoded[12] == 3)
+    assert(decoded[2] == 0)
+    assert(decoded[43] == 0)
+    
+
 
 #%% Tasks
 def task1():
@@ -131,7 +168,7 @@ def task2():
     total_diff_laplace = np.sum(np.abs(cdf-cdf_dp_laplace))
     print(f"Total diff laplace : {total_diff_laplace}")
     total_diff_gauss = np.sum(np.abs(cdf-cdf_dp_gauss))
-    print(f"Total diff gauss : {total_diff_gauss}")
+    print(f"Total diff gauss   : {total_diff_gauss}")
 
     print("cdf_v2:")
     print(hrs_cdf_v2(df), "\n")
