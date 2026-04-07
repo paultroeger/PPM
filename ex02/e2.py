@@ -50,8 +50,8 @@ def avg_wages(data, epsilon):
 
 
 def hrs_cdf(lfs):
-  a = lfs['ATOTHRS']
-  return [len(a[a < i]) for i in range(990)]
+    a = lfs['ATOTHRS']
+    return [len(a[a < i]) for i in range(990)]
 
 
 def hrs_cdf_dp_laplace(lfs, epsilon):
@@ -110,14 +110,16 @@ def decode_responses_sales(responses, alpha):
     p, q = 1 - alpha, alpha
     return (sum_res - len(responses) * q) / (p - q)
 
-#Tests T1
+
+# Tests T1
 def test_encode_response_sales_no_flip():
     # alpha = 0 to prevent flipping bits
     alpha = 0
     one_hot = encode_response_sales(12, alpha)
     compare_one_hot = [0] * 44
     compare_one_hot[12] = 1
-    assert((one_hot == pd.Series(compare_one_hot)).all())
+    assert ((one_hot == pd.Series(compare_one_hot)).all())
+
 
 def test_encode_response_sales_flip():
     # alpha = 1 force bit flip
@@ -125,7 +127,8 @@ def test_encode_response_sales_flip():
     one_hot = encode_response_sales(12, alpha)
     compare_one_hot = [1] * 44
     compare_one_hot[12] = 0
-    assert((one_hot == pd.Series(compare_one_hot)).all())
+    assert ((one_hot == pd.Series(compare_one_hot)).all())
+
 
 def test_encode_response_sales_nan():
     # check if nan is covered
@@ -133,22 +136,73 @@ def test_encode_response_sales_nan():
     one_hot = encode_response_sales(np.nan, alpha)
     compare_one_hot = [0] * 44
     compare_one_hot[0] = 1
-    assert((one_hot == pd.Series(compare_one_hot)).all())
+    assert ((one_hot == pd.Series(compare_one_hot)).all())
+
 
 def test_decode_responses_sales():
     alpha = 0
-    occ_data = pd.DataFrame({'NOC_43' : [12, 12, 12, 1, 1, np.nan]})['NOC_43']
+    occ_data = pd.DataFrame({'NOC_43': [12, 12, 12, 1, 1, np.nan]})['NOC_43']
     encoded = occ_data.apply(encode_response_sales, alpha=alpha)
     decoded = decode_responses_sales(encoded, alpha)
-    assert(decoded[0] == 1)
-    assert(decoded[1] == 2)
-    assert(decoded[12] == 3)
-    assert(decoded[2] == 0)
-    assert(decoded[43] == 0)
-    
+    assert (decoded[0] == 1)
+    assert (decoded[1] == 2)
+    assert (decoded[12] == 3)
+    assert (decoded[2] == 0)
+    assert (decoded[43] == 0)
 
 
-#%% Tasks
+def test_rdp_mech_shape():
+    result = rdp_mech(5)
+
+    assert isinstance(result, np.ndarray)
+    assert len(result) == 990
+
+
+def test_rdp_mech_not_equal_true():
+    true_cdf = np.array(hrs_cdf(load_data()))
+    noisy = rdp_mech(5)
+
+    assert not np.array_equal(true_cdf, noisy)
+
+
+def test_rdp_mech_seed():
+    np.random.seed(42)
+    r1 = rdp_mech(5)
+
+    np.random.seed(42)
+    r2 = rdp_mech(5)
+
+    assert np.array_equal(r1, r2)
+
+
+def test_rdp_mech_different_alpha():
+    r_small = rdp_mech(2)
+    r_large = rdp_mech(10)
+
+    assert len(r_small) == len(r_large)
+
+
+def test_convert_RDP_ED_large_alpha():
+    alpha = 100
+    epsilon_bar = 0.001
+    delta = 1e-5
+
+    epsilon, _ = convert_RDP_ED(alpha, epsilon_bar, delta)
+
+    assert epsilon > epsilon_bar  # must increase
+
+
+def test_convert_RDP_ED_small_delta():
+    alpha = 5
+    epsilon_bar = 0.001
+    delta = 1e-10
+
+    epsilon, _ = convert_RDP_ED(alpha, epsilon_bar, delta)
+
+    assert epsilon > 0
+
+
+# %% Tasks
 def task1():
     print('-' * 6, 'Task 1', '-' * 6)
     df = load_data()
