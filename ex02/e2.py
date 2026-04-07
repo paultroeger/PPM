@@ -92,7 +92,7 @@ def hrs_cdf_v2(lfs, epsilon):
 
 # Here I assume that we should use actual hours, not each hour in decimal.
 def rdp_mech(alpha):
-    l2_sensitivity = np.sqrt(100)
+    l2_sensitivity = np.sqrt(112)
     epsilon_bar = 0.001
     sigma = np.sqrt(alpha * l2_sensitivity ** 2 / (2 * epsilon_bar))
 
@@ -148,10 +148,10 @@ def task1():
 # fewer counts.
 def task2():
     df = pd.read_csv('2025-02-CSV/pub0225.csv')
-    print("Laplace: \n")
-    print(hrs_cdf_dp_laplace(df, 1), "\n")
-    print("Gauss: \n")
-    print(hrs_cdf_dp_gauss(df, 1, 1e-11), "\n")
+    #print("Laplace: \n")
+    #print(hrs_cdf_dp_laplace(df, 1), "\n")
+    #print("Gauss: \n")
+    #print(hrs_cdf_dp_gauss(df, 1, 1e-11), "\n")
     print("Laplace v2: \n")
     print(hrs_cdf_v2(df, 1), "\n")
 
