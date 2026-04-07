@@ -35,7 +35,7 @@
 		\subsection{Renyi differential privacy}
 		The total privacy cost can only be calculated with a selected delta. Assuming $\delta = 10^{-5}$ we can use convert\_RDP\_ED to get an $\epsilon$ cost of 2.879.
 		\subsection{Randomized response}
-		The actual value of individuals with "Professional occupations in engineering" is 3150. Our decoded value is 3171.  Which is very accurate.
+		The actual value of individuals with "Professional occupations in engineering" is 844. Our decoded value is 732.  Which is quite accurate.
 	
 	\section{Manual}
 		\subsection{Running the code}
@@ -49,7 +49,7 @@
 		\subsection{Test Cases}
 	
 		\subsubsection{Task 1 Tests}
-			
+			We test if laplace adds noise and what happens when we set epsilon to 0.
 		\subsubsection{Task 2 Tests}
 			We verify that laplace\_mech adds noise and centers around the value. We test the length of the cdf functions return values.
 			We verify that the differentially private cdf returns the same shape and is noisy.

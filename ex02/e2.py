@@ -25,6 +25,7 @@ def avg_wages_helper(wages, cap, epsilon):
 
 # returns noisy query result according to laplace mechanism result = true_answer + Lap(b) with b = Δf/eps
 def laplace_mech(v, sensitivity, epsilon):
+    if epsilon <= 0: return v
     scale = sensitivity / epsilon
     return v + np.random.laplace(0, scale)
 
@@ -35,7 +36,8 @@ def avg_wages(data, epsilon):
     split_epsilon = epsilon / 5
     # use only wages and remove implied decimal
     wages = data['HRLYEARN'] / 100
-    
+    if wages.empty: return 0
+
     cap = 50
     avg_wages_helper(wages, cap, split_epsilon)
     cap = 100
@@ -109,6 +111,75 @@ def decode_responses_sales(responses, alpha):
     sum_res = np.sum(responses, axis=0)
     p, q = 1 - alpha, alpha
     return (sum_res - len(responses) * q) / (p - q)
+
+# %% Tasks
+def task1():
+    print('-' * 6, 'Task 1', '-' * 6)
+    df = load_data()
+    avg = avg_wages(df, 20)
+    print(f"The differential privacy avg wage is {avg}.")
+    print()
+
+def task2():
+    print('-' * 6, 'Task 2', '-' * 6)
+    df = load_data()
+    cdf = hrs_cdf(df)
+    cdf_dp_laplace = hrs_cdf_dp_laplace(df, 1)
+    
+    delta = 0.9 * (1/np.pow(len(df), 2))
+    cdf_dp_gauss = hrs_cdf_dp_gauss(df, 1, delta)
+    
+    total_diff_laplace = np.sum(np.abs(cdf-cdf_dp_laplace))
+    print(f"Total diff laplace : {total_diff_laplace}")
+    total_diff_gauss = np.sum(np.abs(cdf-cdf_dp_gauss))
+    print(f"Total diff gauss   : {total_diff_gauss}")
+
+    print("cdf_v2:")
+    print(hrs_cdf_v2(df), "\n")
+    print()
+
+def task3():
+    print('-' * 6, 'Task 3', '-' * 6)
+    df = load_data()['ATOTHRS']
+    rdp_mech(5)
+    print(f"ED: {convert_RDP_ED(5, 0.001, 10**(-5))}")
+    print()
+
+def task4():
+    print('-' * 6, 'Task 4', '-' * 6)
+    occ_data = load_data()['NOC_43']
+    alpha = 0.05
+    encoded = occ_data.apply(encode_response_sales, alpha=alpha)
+    decoded = decode_responses_sales(encoded, alpha)
+    print(decoded)
+    print(f"Decoded Value: {decoded.iloc[12]}")
+    print(f"Actual Value: {len(occ_data[occ_data == 12])}")
+    print()
+
+
+# %%
+if __name__ == "__main__":
+    task1()
+    task2()
+    task3()
+    task4()
+
+#%% Tests
+
+# Test T1
+def test_laplace_mech_adds_noise():
+    # With non-zero sensitivity, output should not equal input exactly
+    result = laplace_mech(10.0, 1.0, 1.0)
+    assert result != 10.0
+
+
+def test_laplace_mech_zero_sensitivity_zero_epsilon():
+    # sensitivity=0 → b=0 → no noise, output equals input exactly
+    # epsilon=0 → b=0 → no noise, output equals input exactly
+    result = laplace_mech(7.0, 0.0, 1.0)
+    result2 = laplace_mech(7.0, 1.0, 0.0)
+    assert result == 7.0
+    assert result2 == 7.0
 
 # Tests T2
 # Mock data for testing
@@ -281,57 +352,3 @@ def test_decode_responses_sales():
     assert (decoded[12] == 3)
     assert (decoded[2] == 0)
     assert (decoded[43] == 0)
-
-# %% Tasks
-def task1():
-    print('-' * 6, 'Task 1', '-' * 6)
-    df = load_data()
-    avg = avg_wages(df, 20)
-    print(f"The differential privacy avg wage is {avg}.")
-    print()
-
-def task2():
-    print('-' * 6, 'Task 2', '-' * 6)
-    df = load_data()
-    cdf = hrs_cdf(df)
-    cdf_dp_laplace = hrs_cdf_dp_laplace(df, 1)
-    
-    delta = 0.9 * (1/np.pow(len(df), 2))
-    cdf_dp_gauss = hrs_cdf_dp_gauss(df, 1, delta)
-    
-    total_diff_laplace = np.sum(np.abs(cdf-cdf_dp_laplace))
-    print(f"Total diff laplace : {total_diff_laplace}")
-    total_diff_gauss = np.sum(np.abs(cdf-cdf_dp_gauss))
-    print(f"Total diff gauss   : {total_diff_gauss}")
-
-    print("cdf_v2:")
-    print(hrs_cdf_v2(df), "\n")
-    print()
-
-def task3():
-    print('-' * 6, 'Task 3', '-' * 6)
-    df = load_data()['ATOTHRS']
-    rdp_mech(5)
-    print(f"ED: {convert_RDP_ED(5, 0.001, 10**(-5))}")
-    print()
-
-def task4():
-    print('-' * 6, 'Task 4', '-' * 6)
-    occ_data = load_data()['NOC_43']
-    alpha = 0.05
-    encoded = occ_data.apply(encode_response_sales, alpha=alpha)
-    decoded = decode_responses_sales(encoded, alpha)
-    print(decoded)
-    print(f"Decoded Value: {decoded.iloc[12]}")
-    print(f"Actual Value: {len(occ_data[occ_data == 12])}")
-    print()
-
-
-# %%
-if __name__ == "__main__":
-    task1()
-    task2()
-    task3()
-    task4()
-
-# %%
