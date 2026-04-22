@@ -12,7 +12,6 @@ GLOBAL_SEED = 1234
 field=galois.GF(2 ** 13 - 1)
 
 def shamir_share(x, t, n):
- 
   np.random.seed(GLOBAL_SEED) 
   p = field(np.random.choice(np.arange(1, field.order), size=n, replace=False))
   
@@ -27,13 +26,13 @@ def shamir_share(x, t, n):
 
 
 def add_shares(shares1, shares2):
-   secrets = []
-   for i in range(len(shares1)):
-     if shares1[i][0] == shares2[i][0]:
-       secrets.append([shares1[i][0], shares1[i][1] + shares2[i][1]])
-     else:
-       raise Exception("Not matching x")
-   return field(secrets)
+    secrets = []
+    for i in range(len(shares1)):
+      if shares1[i][0] == shares2[i][0]:
+        secrets.append([shares1[i][0], shares1[i][1] + shares2[i][1]])
+      else:
+        raise Exception("Not matching x")
+    return field(secrets)
 
 
 def add_const(shares, k):
@@ -57,16 +56,18 @@ def reconstruct(shares):
 class Party:
     """A participant in a multiparty computation protocol."""
     def __init__(self):
-        # TODO: your code here
-        raise NotImplementedError()
+        self.id = 0
+        self.input = []
+        self.shares = []
+        self.output = 0
     
     def send(self, other, round, msg):
-        # TODO: your code here
-        raise NotImplementedError()
+        match round:
+           case 1:
+              self.shares[other] = msg
 
     def get_view(self):
-        # TODO: your code here
-        raise NotImplementedError()
+        return self.output
 
 
 class BGW(Party):
@@ -76,39 +77,85 @@ class BGW(Party):
         n = len(parties)
         assert t <= n/2
 
-        # TODO: your code here
-        raise NotImplementedError()
+        m_share = self.input[0][1] * self.input[1][1]
+        shares = shamir_share(m_share, t, n)
+       
+        for i in range(n):
+          self.parties[i].send(self.id, 1, shares[i])
 
     def round2(self):
         n = len(self.parties)
 
-        # TODO: your code here
-        raise NotImplementedError()
+        np.random.seed(GLOBAL_SEED) 
+        p = field(np.random.choice(np.arange(1, field.order), size=n, replace=False))
+
+        coeffs = get_lagrange_coeffs(p)
+        y = field(0)
+        for i in range(n):
+          y += coeffs[i](0) * self.shares[i][1]
+        self.output = [self.shares[0][0], y]
 
 
 def run_bgw(t, n, a, b):
-        # TODO: your code here
-        raise NotImplementedError()
+    secret1 = shamir_share(field(a), t, n)
+    secret2 = shamir_share(field(b), t, n)
+
+    # setup parties
+    parties = [BGW() for _ in range(n)]
+    for i in range(n):
+        parties[i].id = i
+        parties[i].shares = [0] * n
+    # round 1
+    for i in range(n):
+      parties[i].round1(parties, secret1[i], secret2[i], t)
+    # round 2
+    for i in range(n):
+      parties[i].round2()
+    # collect outputs and reconstruct
+    outputs = []
+    for i in range(n):
+      outputs.append(parties[i].get_view())
+    outputs = field(outputs)
+    print(reconstruct(outputs))
+
+
+def get_lagrange_coeffs(x_values):
+    n = len(x_values)
+    p = []
+
+    for i in range(n):
+        y_values = field.Zeros(n)
+        y_values[i] = 1
+     
+        p.append(galois.lagrange_poly(x_values, y_values))
+        
+    return p
 
 # Tasks
 
 def task1():
-  secret1 = shamir_share(field(12), 1, 4)
-  secret2 = shamir_share(field(5), 1, 4)
-  print(secret1)
-  print(secret2)
-  secrets1 = add_const(secret1, 2)
-  reconstruction = reconstruct(secret1[0:2])
-  print("re:", reconstruction)
+    print('-' * 6, 'Task 1', '-' * 6)
+    secret1 = shamir_share(field(12), 1, 4)
+    secret2 = shamir_share(field(5), 1, 4)
+    print(secret1)
+    print(secret2)
+    secrets1 = add_const(secret1, 2)
+    reconstruction = reconstruct(secret1[0:2])
+    print("re:", reconstruction)
 
-  secret3 = add_shares(secret1, secret2)
-  reconstruction = reconstruct(secret3[0:2])
-  print("re:", reconstruction)
+    secret3 = add_shares(secret1, secret2)
+    reconstruction = reconstruct(secret3[0:2])
+    print("re:", reconstruction)
+    print()
+
+def task2():
+    print('-' * 6, 'Task 2', '-' * 6)
+    run_bgw(2, 5, 5, 5)
+    print()
 
 if __name__ == "__main__":
     #field = galois.GF(2 ** 13 - 1)
-
-    task1()
+    task2()
 
 
 # %%
