@@ -75,7 +75,7 @@ class BGW(Party):
         self.input = (a_shr, b_shr)
         self.parties = parties
         n = len(parties)
-        assert t <= n/2
+        assert (t+1) <= n/2
 
         m_share = self.input[0][1] * self.input[1][1]
         shares = shamir_share(m_share, t, n)
@@ -150,7 +150,9 @@ def task1():
 
 def task2():
     print('-' * 6, 'Task 2', '-' * 6)
-    run_bgw(2, 5, 5, 5)
+    t, n, a, b = 2, 5, 5, 5
+    print(f"t:{t}, n:{n}, a:{a}, b:{b}")
+    run_bgw(t, n, a, b)
     print()
 
 if __name__ == "__main__":
