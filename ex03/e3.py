@@ -75,7 +75,8 @@ class BGW(Party):
         self.input = (a_shr, b_shr)
         self.parties = parties
         n = len(parties)
-        assert (t+1) <= n/2
+        # see page 44 in the book
+        assert 2*t+1 <= n
 
         m_share = self.input[0][1] * self.input[1][1]
         shares = shamir_share(m_share, t, n)
@@ -89,6 +90,7 @@ class BGW(Party):
         np.random.seed(GLOBAL_SEED) 
         p = field(np.random.choice(np.arange(1, field.order), size=n, replace=False))
 
+        # page 43 from book coeff 0
         coeffs = get_lagrange_coeffs(p)
         y = field(0)
         for i in range(n):
