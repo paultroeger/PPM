@@ -55,7 +55,7 @@ class BGW(Party):
         self.input = (a_shr, b_shr)
         self.parties = parties
         n = len(parties)
-        assert t <= n / 2
+        assert t < n / 2
 
         h = a_shr[1] * b_shr[1]
         h_shares = shamir_share(h, t, n)
@@ -122,9 +122,9 @@ def task1():
 def task2():
     print("Task 2: \n")
     field = galois.GF(2 ** 13 - 1)
-    a = field(4)
-    b = field(7)
-    result = run_bgw(2, 5, a, b)
+    a = field(5)
+    b = field(5)
+    result = run_bgw(2, 4, a, b)
     print(f"{a} * {b} = {result}")
 
 if __name__ == "__main__":
