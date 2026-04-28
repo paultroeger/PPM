@@ -1,0 +1,77 @@
+\documentclass{article}
+\usepackage{amsmath} % for mathematical symbols
+\usepackage{graphicx} % for including images
+\usepackage{listings}
+\usepackage{hyperref}
+
+\usepackage[a4paper, total={6.5in, 10in}]{geometry}
+
+\begin{document}
+	
+	\title{\vspace{-1.5cm}Ex03 \\ Answers \& Manual}
+	\author{Paul Tr\"oger, Fynn Gohlke, Tom Rodewald, Jan B\"uchele}
+	
+	\maketitle
+	
+	\section{Answers}
+		\subsection{Shamir secret sharing}
+            We assume that all parties share the same known x evaluation points for shamir secret sharing. In our code we draw these from a fixed seed with np.random.choice. This is necessary for adding shares together.
+		\subsection{Ben-Or, Goldwasser, and Wigderson (BGW) Protocol}
+            \textbf{Assumption}:\\
+            We assume that all parties share the same known x evaluation points for shamir secret sharing. In our code we draw these from a fixed seed with np.random.choice. Each party is responsible for evaluation point $x_p$ where $p$ is the party id.\\\\
+            \textbf{Protocol}:
+            \begin{enumerate}
+                \item We generate shamir secrets for $a, b$ with $t, n$ getting $n$ shares per secret.
+                \item We initialize n parties so that each party gets \textbf{one share per secret}.
+                \item We start round 1 by handing out shares:
+                    \begin{enumerate}
+                        \item Each party multiplies it's secret shares y values, increasing the polynomials degree to 2t.
+                        \item Each party generates a new shamir secret where $q(x_p) = p_\alpha(x_p) * p_\beta(x_p)$.
+                        \item Each party sends out $n$ shares for $q(x_p)$ to the $n$ parties.
+                    \end{enumerate}
+                \item Each party now holds $n$ shares for their assigned evaluation point $x_p$.
+                \item We start round 2:
+                    \begin{enumerate}
+                        \item Each party calculates Lagrange coefficients as described in \ref{lagrange}.
+                        \item Each party calculates $q(0) = \sum_{i=1}^{2t+1} \lambda_iq(i)$ as described in "A Pragmatic Introduction to Secure Multi-Party Computation" for each party and store it in the output variable.
+                    \end{enumerate}
+                \item We retrieve the output from all parties with get\_view() and reconstruct the value.
+            \end{enumerate}
+            \subsubsection{Lagrange Coefficients}\label{lagrange}
+                The Lagrange Coefficients are defined as 
+                \begin{equation*}
+                    L_k(x) = \prod_{i=0,i\not=k}^n \frac{(x-x_i)}{(x_k-x_i)}
+                \end{equation*}
+                with properties $L_k(x_k) = 1$ and $L_k(x_j) = 0$ where $x_j \not= x_k$.
+
+    \newpage
+	\section{Manual}
+		\subsection{Running the code}
+		All source code is self contained within a singular file called "e3.py".\\
+		Running the application can be achieved using \textit{python3 e3.py}.\\
+		This runs all the tasks and their respective outputs, Listing \ref{lst:python-output} shows the output of running the application normally.\\
+		There are also python tests defined within the application. These can be run using \textit{pytest -v e3.py}.\\
+		The flag "-v" is not mandatory, but improves clarity on what actually happened.\\
+		Running the tests with the aforementioned command results in an output similar to Listing \ref{lst:pytest-output}.
+		
+		\subsection{Test Cases}
+	
+		\subsubsection{Task 1 Tests}
+		For the \lstinline{shamir_share(x, t, n)} function we test if the reconstruction is possible in for $t+1$ shares.
+		We test if reconstruction is not possible if the shares are insufficient.
+		We also test that all share points are unique.\\
+		For \lstinline{add_const} and \lstinline{mult_const} we test a simple case and a wrap around in the field space.\\
+		
+		\subsubsection{Task 2 Tests}
+        We wrote two tests for \lstinline{run_bgw(t, n, a, b)} which also tests BGW class.\\
+        In test one \lstinline{test_run_bgw_large_t()} we check that the assert inside \lstinline{round1()} throws an exception if $2t+1 <= n$.\\
+        In test two \lstinline{test_run_bgw_correctness()} we test different configurations and their output.\\
+        We test \lstinline{get_lagrange_coeffs(x_values)} with a two point and three point example. We can calculate the result per hand and verify if our function outputs correct Lagrange coefficients. See \ref{lagrange} for Lagrange equation.
+		
+		\newpage
+		\section{Appendix}
+			\subsection{Python-output}\label{lst:python-output}
+				\lstinputlisting{python-output}
+			\subsection{Pytest-output}
+				\lstinputlisting{pytest-output}\label{lst:pytest-output}
+\end{document}

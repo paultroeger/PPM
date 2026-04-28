@@ -1,0 +1,18 @@
+============================= test session starts ==============================
+platform linux -- Python 3.14.3, pytest-9.0.2, pluggy-1.5.0
+cachedir: .pytest_cache
+collecting ... collected 11 items
+
+e3.py::test_shamir_share_reconstruction PASSED                           [  9%]
+e3.py::test_shamir_share_insufficient_shares PASSED                      [ 18%]
+e3.py::test_shamir_share_uniqueness PASSED                               [ 27%]
+e3.py::test_add_const PASSED                                             [ 36%]
+e3.py::test_add_const_field_wraparound PASSED                            [ 45%]
+e3.py::test_mult_const PASSED                                            [ 54%]
+e3.py::test_mult_const_field_wraparound PASSED                           [ 63%]
+e3.py::test_run_bgw_large_t PASSED                                       [ 72%]
+e3.py::test_run_bgw_correctness PASSED                                   [ 81%]
+e3.py::test_get_lagrange_coeffs_two_points PASSED                        [ 90%]
+e3.py::test_get_lagrange_coeffs_three_points PASSED                      [100%]
+
+============================== 11 passed in 4.24s ==============================

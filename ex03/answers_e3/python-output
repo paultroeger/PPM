@@ -1,0 +1,21 @@
+------ Task 1 ------
+t:1, n:4, a:12, b:5
+shares_a
+ [[1557 5908]
+ [6987 5243]
+ [6795 7846]
+ [6474 3111]]
+shares_b
+ [[1557 5908]
+ [6987 5243]
+ [6795 7846]
+ [6474 3111]]
+Adding constant 2 to shares_a
+re: 14
+Adding shares_a+2 and shares_b together..
+re: 19
+
+------ Task 2 ------
+t:2, n:5, a:5, b:5
+re: 25
+
