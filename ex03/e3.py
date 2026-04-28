@@ -166,13 +166,49 @@ def test_shamir_share_uniqueness():
 
     x_coords = [int(x) for x in shares[:, 0]]
     y_shares = [int(y) for y in shares[:, 1]]
-
+    
     # Check: No two people have the same ID (x)
     assert len(set(x_coords)) == n
 
     # Check: No two people have the same share value (y)
     # (In a large field, it is statistically impossible for two shares to be identical)
     assert len(set(y_shares)) == n
+
+# Test simple addition
+def test_add_const():
+    shares = shamir_share(field(5), 2, 5)
+    added1 = add_const(shares, 5)
+    added2 = add_const(shares, 0)
+    reconstructed1 = reconstruct(added1[:3])
+    reconstructed2 = reconstruct(added2[:3])
+    assert reconstructed1 == 10
+    assert reconstructed2 == 5
+
+
+# Test addition with wraparound
+def test_add_const_field_wraparound():
+    shares = shamir_share(field((2 ** 13 - 1) - 1), 2, 5)
+    added = add_const(shares, 5)
+    reconstructed = reconstruct(added[:3])
+    assert reconstructed == 4
+
+# Test simple multiplication
+def test_mult_const():
+    shares = shamir_share(field(5), 2, 5)
+    mult1 = mult_const(shares, 5)
+    mult2 = mult_const(shares, 0)
+    reconstructed1 = reconstruct(mult1[:3])
+    reconstructed2 = reconstruct(mult2[:3])
+    assert reconstructed1 == 25
+    assert reconstructed2 == 0
+
+
+# Test multiplication with wraparound
+def test_mult_const_field_wraparound():
+    shares = shamir_share(field((2 ** 13 - 1) - 1), 2, 5)
+    mult = mult_const(shares, 2)
+    reconstructed = reconstruct(mult[:3])
+    assert reconstructed == (2 ** 13 - 1) - 2
 
 ## Task 2
 
@@ -241,18 +277,18 @@ def task1():
     print('-' * 6, 'Task 1', '-' * 6)
     t, n, a, b = 1, 4, 12, 5
     print(f"t:{t}, n:{n}, a:{a}, b:{b}")
-    secret1 = shamir_share(field(a), t, n)
-    secret2 = shamir_share(field(b), t, n)
-    print("Secret1\n", secret1)
-    print("Secret2\n", secret2)
+    shares_a = shamir_share(field(a), t, n)
+    shares_b = shamir_share(field(b), t, n)
+    print("shares_a\n", shares_a)
+    print("shares_b\n", shares_a)
     c = 2
-    print("Adding constant", c, "to shares1")
-    secret1 = add_const(secret1, c)
-    reconstruction = reconstruct(secret1[0:2])
+    print("Adding constant", c, "to shares_a")
+    shares_a = add_const(shares_a, c)
+    reconstruction = reconstruct(shares_a[0:2])
     print("re:", reconstruction)
 
-    print("Adding shares together..")
-    secret3 = add_shares(secret1, secret2)
+    print("Adding shares_a+2 and shares_b together..")
+    secret3 = add_shares(shares_a, shares_b)
     reconstruction = reconstruct(secret3[0:2])
     print("re:", reconstruction)
     print()

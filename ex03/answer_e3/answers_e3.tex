@@ -57,6 +57,10 @@
 		\subsection{Test Cases}
 	
 		\subsubsection{Task 1 Tests}
+		For the \lstinline{shamir_share(x, t, n)} function we test if the reconstruction is possible in for $t+1$ shares.
+		We test if reconstruction is not possible if the shares are insufficient.
+		We also test that all share points are unique.\\
+		For \lstinline{add_const} and \lstinline{mult_const} we test a simple case and a wrap around in the field space.\\
 		
 		\subsubsection{Task 2 Tests}
         We wrote two tests for \lstinline{run_bgw(t, n, a, b)} which also tests BGW class.\\
@@ -64,10 +68,10 @@
         In test two \lstinline{test_run_bgw_correctness()} we test different configurations and their output.\\
         We test \lstinline{get_lagrange_coeffs(x_values)} with a two point and three point example. We can calculate the result per hand and verify if our function outputs correct Lagrange coefficients. See \ref{lagrange} for Lagrange equation.
 		
-	
+		\newpage
 		\section{Appendix}
 			\subsection{Python-output}\label{lst:python-output}
-				%\lstinputlisting{python-output}
+				\lstinputlisting{python-output}
 			\subsection{Pytest-output}
-				%lstinputlisting{pytest-output}\label{lst:pytest-output}
+				\lstinputlisting{pytest-output}\label{lst:pytest-output}
 \end{document}
