@@ -23,7 +23,42 @@ def shamir_share(x, t, n):
       secrets.append([p[i], poly(p[i])])
   return field(secrets)
 
+def test_shamir_share_reconstruction():
+    """Test if t+1 shares correctly reconstruct the secret."""
+    t, n = 2, 5
+    secret_value = field(42)
+    shares = shamir_share(secret_value, t, n)
+    
+    # Use exactly t+1 shares (the minimum required)
+    reconstructed = reconstruct(shares[:t+1])
+    assert reconstructed == secret_value
 
+def test_shamir_share_insufficient_shares():
+    """Test that t shares are not enough to reconstruct the secret."""
+    t, n = 2, 5
+    secret_value = field(100)
+    shares = shamir_share(secret_value, t, n)
+    
+    # Try to reconstruct with only t shares
+    # This should result in a different value (or fail depending on implementation)
+    reconstructed = reconstruct(shares[:t])
+    assert reconstructed != secret_value
+
+def test_shamir_share_uniqueness():
+    """Checks that participants get distinct and unique data points."""
+    t, n, secret = 2, 5, field(123)
+    shares = shamir_share(secret, t, n)
+    
+    x_coords = shares[:, 0]
+    y_shares = shares[:, 1]
+    
+    # Check: No two people have the same ID (x)
+    assert len(set(x_coords)) == n
+    
+    # Check: No two people have the same share value (y)
+    # (In a large field, it is statistically impossible for two shares to be identical)
+    assert len(set(y_shares)) == n
+    
 def add_shares(shares1, shares2):
     secrets = []
     for i in range(len(shares1)):
