@@ -16,9 +16,11 @@ sns.set_style("whitegrid")
 
 # This is the gradient of the logistic loss
 def gradient(weights, xi, yi):
-    yi = -1 if yi == 0 else 1
+    # yi = -1 if yi == 0 else 1
     exponent = yi * (xi.dot(weights))
+    print(exponent)
     return - (yi*xi) / (1+np.exp(exponent))
+    
 
 
 def rdpgd(iterations, alpha, epsilon_bar):
@@ -28,29 +30,32 @@ def rdpgd(iterations, alpha, epsilon_bar):
     weights = np.zeros(X_train.shape[1])
     n = X_train.shape[0]
 
-    epsilon_step = epsilon_bar / iterations
+    # everytime we add noise on the gradient we need privacy budget
+    # using sequential composition we split epsilon
+    epsilon_step = epsilon_bar / (iterations * n)
     sigma = np.sqrt(alpha / (2 * epsilon_step))
 
     for t in range(iterations):
 
         # gradient
-        grad = np.zeros_like(weights)
+        grad_sum = np.zeros_like(weights)
         for i in range(n):
-            grad += gradient(weights, X_train[i], y_train[i])
-        grad /= n
-
-        # do we clip here?
-        grad_norm = np.linalg.norm(grad)
-        if grad_norm > 1.0:
-            grad = grad * (1.0 / grad_norm)
-
-        # noise
-        noise = np.random.normal(loc=0, scale=sigma / n, size=weights.shape)
-        noisy_grad = grad + noise
+            grad = gradient(weights, X_train[i], y_train[i])
         
+            # do we clip here?
+            grad_norm = np.linalg.norm(grad)
+            if grad_norm > 1.0:
+                grad = grad * (1.0 / grad_norm)
+
+            # noise
+            noise = np.random.normal(loc=0, scale=sigma, size=weights.shape)
+            noisy_grad = grad + noise
+
+            grad_sum += noisy_grad
+
         # weight update
-        lr = 0.1
-        weights -= lr * noisy_grad
+        learning_rate = 0.1
+        weights -= learning_rate * (grad_sum / n)
 
     model = LogisticRegression(max_iter=100)
     model.coef_ = weights.reshape(1, -1)
@@ -68,7 +73,12 @@ def dpsgd(iterations, epsilon, delta, learning_rate, batch_size, C):
     n = X_train.shape[0]
     weights = np.zeros(X_train.shape[1])
 
-    sigma = C * np.sqrt(2 * np.log(1.25 / delta)) / epsilon
+    # everytime we add noise on the gradient we need privacy budget
+    # using sequential composition we split epsilon
+    # worse case we touch each data point in each batch
+    # that's why we need to split by batch_size * n
+    epsilon_step = epsilon / (batch_size * n)
+    sigma = C * np.sqrt(2 * np.log(1.25 / delta)) / epsilon_step
 
     for t in range(iterations):
         indices = np.random.choice(n, size=batch_size, replace=False)
@@ -81,12 +91,10 @@ def dpsgd(iterations, epsilon, delta, learning_rate, batch_size, C):
             if g_norm > C:
                 g = g * (C / g_norm)
 
-            grad_sum += g
+            noise = np.random.normal(0, sigma, size=weights.shape)
+            grad_sum += (g + noise)
 
-        noise = np.random.normal(0, sigma, size=weights.shape)
-        noisy_grad = (grad_sum + noise) / batch_size
-
-        weights -= learning_rate * noisy_grad
+        weights -= learning_rate * (grad_sum / batch_size)
 
     model = LogisticRegression(max_iter=100)
     model.coef_      = weights.reshape(1, -1)
@@ -229,6 +237,6 @@ def task3():
 if __name__ == "__main__":
     task1()
     task2()
-    task3()
+    #task3()
 
 # %%
