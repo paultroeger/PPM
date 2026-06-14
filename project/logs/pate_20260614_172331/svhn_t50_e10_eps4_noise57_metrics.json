@@ -1,0 +1,11 @@
+{
+  "dataset": "svhn",
+  "delta": 1e-05,
+  "epsilon": 4.073329990545205,
+  "nb_teachers": 50,
+  "noise_scale": 57.0,
+  "optimal_order": 7.0,
+  "smooth_sensitivity": true,
+  "student_accuracy": 0.1965883668903803,
+  "student_queries": 1000
+}
