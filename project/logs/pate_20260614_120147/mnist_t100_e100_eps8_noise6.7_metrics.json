@@ -1,0 +1,11 @@
+{
+  "dataset": "mnist",
+  "delta": 1e-05,
+  "epsilon": 9.402703965267811,
+  "nb_teachers": 100,
+  "noise_scale": 6.7,
+  "optimal_order": 4.5,
+  "smooth_sensitivity": true,
+  "student_accuracy": 0.9343333333333333,
+  "student_queries": 1000
+}

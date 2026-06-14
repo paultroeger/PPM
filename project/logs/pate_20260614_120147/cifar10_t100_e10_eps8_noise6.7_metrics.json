@@ -1,0 +1,11 @@
+{
+  "dataset": "cifar10",
+  "delta": 1e-05,
+  "epsilon": 37.2947146917943,
+  "nb_teachers": 100,
+  "noise_scale": 6.7,
+  "optimal_order": 2.0,
+  "smooth_sensitivity": true,
+  "student_accuracy": 0.40955555555555556,
+  "student_queries": 1000
+}

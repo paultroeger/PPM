@@ -6,9 +6,12 @@ from torch.utils.data import DataLoader, TensorDataset
 
 def get_device():
     if torch.cuda.is_available():
+        print("cuda")
         return torch.device("cuda")
     if torch.backends.mps.is_available():
+        print("mps")
         return torch.device("mps")
+    print("cpu")
     return torch.device("cpu")
 
 
