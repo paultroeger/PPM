@@ -1,0 +1,10 @@
+dataset	epochs	batch_size	lr	final_accuracy	best_accuracy	wall_time_s	status	log_file
+mnist	10	128	0.01	0.9916	0.9916	62.03	OK	mnist_e10.log
+mnist	50	128	0.01	0.9938	0.9942	292.06	OK	mnist_e50.log
+mnist	100	128	0.01	0.9930	0.9944	580.80	OK	mnist_e100.log
+svhn	10	128	0.01	0.9181	0.9181	111.18	OK	svhn_e10.log
+svhn	50	128	0.01	0.9234	0.9261	554.26	OK	svhn_e50.log
+svhn	100	128	0.01	0.9226	0.9265	1112.55	OK	svhn_e100.log
+cifar10	10	128	0.01	0.7823	0.7823	98.28	OK	cifar10_e10.log
+cifar10	50	128	0.01	0.7960	0.8048	377.76	OK	cifar10_e50.log
+cifar10	100	128	0.01	0.7995	0.8074	747.74	OK	cifar10_e100.log
