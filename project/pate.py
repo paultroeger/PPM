@@ -5,7 +5,7 @@ Trains the full teacher ensemble, then the student, then reports the GNMax
 epsilon.
 
 Example:
-    python project/pate_pytorch/pate.py --dataset=svhn --nb_teachers=10 \
+    python project/pate.py --dataset=svhn --nb_teachers=10 \
         --teacher_epochs=30 --student_epochs=80 --student_queries=1000 \
         --noise_scale=20.0 --delta=1e-5
 """
