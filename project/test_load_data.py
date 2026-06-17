@@ -32,7 +32,7 @@ def get_mnist(batch_size=64):
 def get_svhn(batch_size=64):
     transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        transforms.Normalize((0.4377, 0.4438, 0.4728), (0.198, 0.201, 0.197))
     ])
     train = datasets.SVHN(root='./data', split='train', download=True, transform=transform)
     test = datasets.SVHN(root='./data', split='test', download=True, transform=transform)
@@ -45,7 +45,7 @@ def get_svhn(batch_size=64):
 def get_cifar10(batch_size=64):
     transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.2435, 0.2616))
     ])
     train = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
     test = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
@@ -96,7 +96,7 @@ def ld_svhn(test_only=False, data_dir='./data'):
     # same normalization as get_svhn
     transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        transforms.Normalize((0.4377, 0.4438, 0.4728), (0.198, 0.201, 0.197))
     ])
     test = datasets.SVHN(root=data_dir, split='test', download=True, transform=transform)
     test_data, test_labels = _dataset_to_tensors(test)
@@ -112,7 +112,7 @@ def ld_cifar10(test_only=False, data_dir='./data'):
     # same normalization as get_cifar10
     transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.2435, 0.2616))
     ])
     test = datasets.CIFAR10(root=data_dir, train=False, download=True, transform=transform)
     test_data, test_labels = _dataset_to_tensors(test)

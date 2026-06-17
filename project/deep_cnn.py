@@ -15,7 +15,20 @@ def get_device():
     return torch.device("cpu")
 
 
-def deep_cnn(dataset):
+def deep_cnn(dataset, simple=False):
+    # Simple MLP baseline. Fewer parameters can do better under strong DP:
+    # less to noise => the budget is spent more efficiently => higher accuracy
+    # at the same epsilon.
+    if simple:
+        in_dim = {"MNIST": 28 * 28, "SVHN": 32 * 32 * 3,
+                  "CIFAR10": 32 * 32 * 3}[dataset]
+        return nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(in_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, 10),
+        )
+
     if dataset == "MNIST":
         # MNIST: simplest, grayscale 28x28, easy to classify
         # 2 conv layers, small filters
@@ -75,19 +88,6 @@ def deep_cnn(dataset):
             nn.ReLU(),
             nn.Dropout(0.5),
             nn.Linear(256, 10)
-        )
-
-    # Simple MLP baseline - fewer parameters can outperform CNN under strong DP constraints because:    
-    #   more parameters 
-    #=> more epsilon budget
-    #=> lower accuracy
-    elif dataset == "SIMPLE": 
-        
-        model = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(28 * 28, 128),
-            nn.ReLU(),
-            nn.Linear(128, 10)
         )
 
     return model
