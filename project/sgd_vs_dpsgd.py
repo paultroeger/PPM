@@ -154,15 +154,15 @@ if __name__ == "__main__":
     train_normal_sgd(
         dataset    = "MNIST",
         step_size  = 0.01,
-        batch_size = 64,
-        epochs     = 0
+        batch_size = 128,
+        epochs     = 20
     )
 
     # Test DP-SGD on MNIST
     train_dp_sgd(
         dataset    = "MNIST",
         step_size  = 0.01,
-        batch_size = 64,
+        batch_size = 128,
         epochs     = 25,
         private    = True,
         C          = 1.0,

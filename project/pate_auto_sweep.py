@@ -2,7 +2,7 @@
 Automated PATE noise-scale sweep.
 
 Trains or resumes teacher ensembles, chooses noise scales for target epsilons,
-trains one student per chosen sigma, and writes logs plus markdown summaries.
+trains one student per chosen sigma, and writes logs.
 
 Note: Claude was used to help create this multi-training script.
 """
@@ -43,11 +43,6 @@ PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR    = os.path.join(PROJECT_DIR, "data")
 TEACHER_BASE = os.path.join(DATA_DIR, "pate_teachers")
 
-
-def md_path(te):
-    """Markdown path for one teacher-epoch setting."""
-    q = "" if STUDENT_QUERIES == 1000 else f"_q{STUDENT_QUERIES}"
-    return os.path.join(DATA_DIR, f"pate_best_noise_e{te}{q}.md")
 
 SIGMA_GRID = sorted(set(
     list(range(5, 30, 1)) + list(range(30, 80, 2)) +
@@ -218,28 +213,6 @@ def train_student(dataset, teachers_preds, sigma, stdnt_data,
     return metrics.accuracy(preds, eval_labels.numpy())
 
 
-def write_md(results, ts, te):
-    """(Re)writes the best-per-epsilon markdown for one teacher-epoch value."""
-    lines = [
-        "# PATE noise sweep — best noise scale per target ε",
-        "",
-        f"_Generated {ts}; δ={DELTA}, {STUDENT_QUERIES} queries, "
-        f"student {STUDENT_EPOCHS} epochs, teacher {te} epochs._",
-        "",
-        f"For each target ε, σ is bisected so the data-dependent ε lands "
-        f"within ±{EPS_TOL} of the target.",
-        "",
-        "| Dataset | Teachers | Target ε | Chosen σ | Achieved ε | Student acc |",
-        "|---|---|---|---|---|---|",
-    ]
-    for r in results:
-        lines.append(
-            f"| {r['dataset']} | {r['nb_teachers']} | {r['target_eps']:.0f} | "
-            f"{r['sigma']:.1f} | {r['achieved_eps']:.2f} | {r['accuracy']:.4f} |")
-    with open(md_path(te), "w") as f:
-        f.write("\n".join(lines) + "\n")
-
-
 def _summary_header():
     return ("dataset\tnb_teachers\tteacher_epochs\ttarget_eps\tsigma\t"
             "achieved_eps\taccuracy\twall_time_s\tstatus\n")
@@ -316,7 +289,6 @@ def _run_config(dataset, nb, te, run_dir, summary, results, ts):
             })
             _append_result(summary, dataset, nb, te, target, sigma, achieved,
                            acc, dt)
-            write_md(results, ts, te)
     except Exception as exc:  # noqa: BLE001 - keep the sweep going
         log("  CONFIG FAILED:\n" + traceback.format_exc())
         _append_failure(summary, dataset, nb, te, time.time() - t_cfg, exc)
@@ -354,7 +326,7 @@ def main():
                         help="Comma-separated subset of teacher counts to run.")
     parser.add_argument("--epochs", default=None,
                         help="Comma-separated teacher-epoch values; one full "
-                             "sweep (-> its own _e<te>.md) is run per value.")
+                             "sweep is run per value.")
     parser.add_argument("--queries", type=int, default=None,
                         help="Number of student queries (default 1000).")
     args = parser.parse_args()
@@ -371,14 +343,11 @@ def main():
     os.makedirs(DATA_DIR, exist_ok=True)
     log(f"device: {deep_cnn.get_device()}")
     log(f"run dir: {run_dir}")
-    log(f"teacher epochs: {TEACHER_EPOCHS} | queries: {STUDENT_QUERIES}")
-    log(f"markdown: {', '.join(md_path(te) for te in TEACHER_EPOCHS)}\n")
+    log(f"teacher epochs: {TEACHER_EPOCHS} | queries: {STUDENT_QUERIES}\n")
 
     _run_all_sweeps(run_dir, summary, ts)
 
     log("ALL DONE.")
-    log(f"  best-per-ε tables: "
-        f"{', '.join(md_path(te) for te in TEACHER_EPOCHS)}")
     log(f"  details: {run_dir}")
 
 
