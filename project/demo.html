@@ -1,1580 +1,285 @@
 <!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>pate_explorer.ipynb</title>
-    <style>
-        :root {
-            --page: #ececed;
-            --nb: #ffffff;
-            --cell: #fbfbfc;
-            --line: #e3e3e8;
-            --line-2: #eeeef1;
-            --ink: #1f2123;
-            --muted: #5f6368;
-            --faint: #9aa0a6;
-            --grid: #dddddd;
-            --axis: #3a3d40;
-            --eps: #1f77b4;
-            --acc: #ff7f0e;
-            --danger: #d62728;
-            --in: #3070b3;
-            --out: #c1502e;
-            --mono: ui-monospace, "SF Mono", "DejaVu Sans Mono", "JetBrains Mono", Menlo, Consolas, monospace;
-            --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        * {
-            box-sizing: border-box
-        }
-
-        html, body {
-            margin: 0
-        }
-
-        body {
-            background: var(--page);
-            color: var(--ink);
-            font-family: var(--sans);
-            -webkit-font-smoothing: antialiased;
-            line-height: 1.5;
-            padding: 24px 14px 60px;
-        }
-
-        .nb {
-            max-width: 980px;
-            margin: 0 auto;
-            background: var(--nb);
-            border: 1px solid #d3d3d8;
-            border-radius: 6px;
-            overflow: hidden;
-            box-shadow: 0 1px 0 rgba(0, 0, 0, .04), 0 10px 30px rgba(20, 30, 50, .06);
-        }
-
-        .pad {
-            padding: 20px 22px
-        }
-
-        h1 {
-            font-size: 23px;
-            font-weight: 700;
-            letter-spacing: -.01em;
-            margin: 2px 0 4px
-        }
-
-        .lede {
-            color: var(--muted);
-            font-size: 14px;
-            max-width: 64ch;
-            margin: 0
-        }
-
-        .lede code {
-            font-family: var(--mono);
-            background: var(--cell);
-            border: 1px solid var(--line);
-            border-radius: 4px;
-            padding: 0 5px;
-            font-size: 12.5px
-        }
-
-        /* notebook cells with prompt gutters */
-        .cell {
-            display: grid;
-            grid-template-columns:62px 1fr;
-            gap: 0;
-            border: 1px solid var(--line);
-            border-radius: 5px;
-            margin-top: 16px;
-            background: var(--cell);
-        }
-
-        .prompt {
-            font-family: var(--mono);
-            font-size: 12px;
-            padding: 14px 8px;
-            text-align: right;
-            user-select: none;
-            border-right: 1px solid var(--line-2);
-        }
-
-        .prompt.in {
-            color: var(--in)
-        }
-
-        .prompt.out {
-            color: var(--out)
-        }
-
-        .body {
-            padding: 16px 18px;
-            min-width: 0
-        }
-
-        /* dataset tabs */
-        .tabs {
-            display: inline-flex;
-            border: 1px solid var(--line);
-            border-radius: 6px;
-            overflow: hidden;
-            margin-bottom: 16px
-        }
-
-        .tab {
-            appearance: none;
-            cursor: pointer;
-            font-family: var(--sans);
-            font-size: 13.5px;
-            font-weight: 600;
-            background: #fff;
-            color: var(--muted);
-            border: 0;
-            border-right: 1px solid var(--line);
-            padding: 8px 16px;
-        }
-
-        .tab:last-child {
-            border-right: 0
-        }
-
-        .tab[aria-pressed="true"] {
-            background: var(--eps);
-            color: #fff
-        }
-
-        .tab:focus-visible {
-            outline: 2px solid var(--eps);
-            outline-offset: 2px
-        }
-
-        /* sliders */
-        .slider {
-            display: grid;
-            grid-template-columns:118px 1fr 92px;
-            align-items: center;
-            gap: 14px;
-            margin: 13px 0
-        }
-
-        .slider label {
-            font-size: 13.5px;
-            color: var(--ink);
-            font-weight: 600
-        }
-
-        .slider label small {
-            display: block;
-            font-weight: 400;
-            color: var(--faint);
-            font-size: 11px
-        }
-
-        .slider input[type=range] {
-            width: 100%;
-            accent-color: var(--eps);
-            height: 22px
-        }
-
-        .slider .val {
-            font-family: var(--mono);
-            font-size: 20px;
-            font-weight: 600;
-            text-align: right;
-            color: var(--ink)
-        }
-
-        .slider .val small {
-            font-size: 12px;
-            color: var(--faint);
-            font-weight: 400
-        }
-
-        /* config echo line */
-        .config {
-            font-family: var(--mono);
-            font-size: 13.5px;
-            color: var(--muted);
-            margin: 0 0 14px
-        }
-
-        .config b {
-            color: var(--ink)
-        }
-
-        /* gauges */
-        .gauges {
-            display: grid;
-            grid-template-columns:1fr 1fr;
-            gap: 14px
-        }
-
-        .gauge {
-            border: 1px solid var(--line);
-            border-radius: 6px;
-            padding: 14px 16px 13px;
-            background: #fff
-        }
-
-        .gauge .lab {
-            font-size: 11px;
-            letter-spacing: .04em;
-            text-transform: uppercase;
-            color: var(--muted);
-            font-weight: 600
-        }
-
-        .gauge .big {
-            font-family: var(--mono);
-            font-weight: 700;
-            font-size: clamp(34px, 5.4vw, 50px);
-            line-height: 1.05;
-            margin: 6px 0 2px;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .gauge.e .big {
-            color: var(--eps)
-        }
-
-        .gauge.a .big {
-            color: var(--acc)
-        }
-
-        .gauge .big .u {
-            font-size: .4em;
-            color: var(--muted);
-            margin-left: .12em
-        }
-
-        .gauge .sub {
-            font-size: 12px;
-            color: var(--muted)
-        }
-
-        .gauge.e .f {
-            background: var(--eps)
-        }
-
-        .gauge.a .f {
-            background: var(--acc)
-        }
-
-        /* prominent stat tiles */
-        .stats {
-            display: grid;
-            grid-template-columns:repeat(4, 1fr);
-            gap: 10px;
-            margin-top: 14px
-        }
-
-        .stat {
-            border: 1px solid var(--line);
-            border-radius: 6px;
-            padding: 11px 13px;
-            background: #fff
-        }
-
-        .stat .n {
-            font-family: var(--mono);
-            font-size: 23px;
-            font-weight: 700;
-            color: var(--ink);
-            line-height: 1.1;
-            font-variant-numeric: tabular-nums
-        }
-
-        .stat .k {
-            font-size: 11.5px;
-            color: var(--muted);
-            margin-top: 3px
-        }
-
-        @media (max-width: 620px) {
-            .stats {
-                grid-template-columns:repeat(2, 1fr)
-            }
-
-            .gauges {
-                grid-template-columns:1fr
-            }
-
-            .slider {
-                grid-template-columns:96px 1fr 80px
-            }
-        }
-
-        /* plot */
-        .plotwrap {
-            margin-top: 16px;
-            border: 1px solid var(--line);
-            border-radius: 6px;
-            background: #fff;
-            padding: 12px 12px 6px
-        }
-
-        .plotwrap .cap {
-            font-family: var(--mono);
-            font-size: 12px;
-            color: var(--muted);
-            margin: 2px 4px 8px
-        }
-
-        svg {
-            display: block;
-            width: 100%;
-            height: auto
-        }
-
-        .note {
-            font-size: 12px;
-            color: var(--faint);
-            font-style: italic;
-            margin: 10px 2px 0
-        }
-
-        /* interpretation */
-        .interp {
-            margin-top: 14px;
-            border: 1px solid var(--line);
-            border-left: 4px solid var(--eps);
-            border-radius: 5px;
-            padding: 12px 15px;
-            background: #fff;
-            font-size: 14.5px
-        }
-
-        .interp.s-strong {
-            border-left-color: #2ca02c
-        }
-
-        .interp.s-mid {
-            border-left-color: var(--acc)
-        }
-
-        .interp.s-collapse {
-            border-left-color: var(--danger)
-        }
-
-        .interp b {
-            font-weight: 700
-        }
-
-        .interp.s-collapse b {
-            color: var(--danger)
-        }
-
-        footer {
-            max-width: 980px;
-            margin: 14px auto 0;
-            font-size: 11.5px;
-            color: var(--faint);
-            font-family: var(--mono)
-        }
-    </style>
-</head>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>privacy notebook — DP-SGD vs PATE</title>
+<style>
+  :root{
+    --paper:#f4f1e6; --ink:#1f2a33;
+    --muted:#5d6670; --faint:#94999f;
+    --gridheavy:#c3d0da; --axis:#243039;
+    --sgd:#8b8a82; --dpsgd:#bb3b2f; --pate:#2f5d9e;
+    --mono:ui-monospace,"SF Mono","DejaVu Sans Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{color:var(--ink); font-family:var(--sans); line-height:1.5; padding:30px 14px 50px; -webkit-font-smoothing:antialiased; background:#fff;}
+  .sheet{max-width:1000px; margin:0 auto; position:relative}
+  .head{margin:0 0 14px}
+  h1{font-size:25px; font-weight:800; letter-spacing:-.01em; margin:0 0 5px}
+  h1 u{text-decoration:none; box-shadow:inset 0 -8px 0 rgba(187,59,47,.18)}
+  .lede{color:#46505a; font-size:14px; max-width:64ch; margin:0}
+  .lede b.dp{color:var(--dpsgd)} .lede b.pa{color:var(--pate)}
+  .lede code{font-family:var(--mono); font-size:12.5px}
+  .panel{margin-top:18px; background:#fff; border:1.5px solid var(--ink); border-radius:3px; padding:14px 16px; box-shadow:3px 3px 0 rgba(31,42,51,.12)}
+  .seclabel{font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:0 0 10px}
+  .row{display:flex; flex-wrap:wrap; gap:18px 28px; align-items:flex-end}
+  .grp{display:flex; flex-direction:column; gap:7px}
+  .grp .lab{font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); font-weight:700}
+  .tabs,.btns{display:inline-flex; border:1.5px solid var(--ink); border-radius:3px; overflow:hidden}
+  .tabs button,.btns button{appearance:none; border:0; border-right:1.5px solid var(--ink); background:transparent; color:var(--ink); font:700 13px var(--sans); padding:8px 15px; cursor:pointer}
+  .tabs button:last-child,.btns button:last-child{border-right:0}
+  .tabs button[aria-pressed=true]{background:var(--pate); color:#fff}
+  .btns.eps button[aria-pressed=true]{background:var(--ink); color:var(--paper)}
+  button:focus-visible{outline:2px solid var(--pate); outline-offset:2px}
+  .sl{display:grid; grid-template-columns:96px 200px 70px; align-items:center; gap:12px}
+  .sl label{font-size:13px; font-weight:700}
+  .sl input[type=range]{width:100%; accent-color:var(--dpsgd)}
+  .sl .v{font-family:var(--mono); font-size:19px; font-weight:700; text-align:right}
+  .viewing{font-family:var(--mono); font-size:12px; color:var(--muted); margin:0 0 12px}
+  .viewing b{color:var(--ink)}
+  .cards{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:16px}
+  .card{border:1.5px solid var(--ink); border-radius:3px; padding:10px 12px; background:#fff}
+  .card.dpsgd{border-color:var(--dpsgd); border-width:2px}
+  .card .nm{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; color:var(--ink)}
+  .card .ac{font-family:var(--mono); font-weight:800; line-height:1.1; font-variant-numeric:tabular-nums; font-size:27px; margin-top:3px}
+  .card.dpsgd .ac{font-size:30px}
+  .card .ep{font-family:var(--mono); font-size:11.5px; color:var(--muted)}
+  .card .ep.clamp{color:var(--dpsgd)}
+  @media(max-width:680px){.cards{grid-template-columns:1fr 1fr} .sl{grid-template-columns:84px 1fr 60px}}
+  figure.plot{margin:0}
+  .plotbox{border:1.5px solid var(--ink); border-radius:3px; background:#fff; padding:10px 12px 4px}
+  svg{display:block; width:100%; height:auto}
+  figcaption{font-size:12.5px; color:#46505a; margin-top:8px; padding-left:2px}
+  figcaption b{font-family:var(--mono); font-weight:700; color:var(--ink)}
+  .legend{display:flex; flex-wrap:wrap; gap:16px; font-size:12px; color:var(--muted); padding:8px 4px 2px}
+  .legend span i{display:inline-block; width:18px; height:0; border-top:3px solid currentColor; vertical-align:middle; margin-right:6px}
+  .legend .dash i{border-top-style:dashed}
+  .legend .focus{font-weight:800}
+  .note{font-size:12px; color:#6a7178; font-style:italic; margin:8px 2px 0}
+  .interp{margin-top:16px; background:#fff; border:1.5px solid var(--ink); border-left:5px solid var(--dpsgd); border-radius:3px; padding:12px 15px; font-size:14.5px; box-shadow:3px 3px 0 rgba(31,42,51,.1)}
+  .interp.collapse{border-left-color:var(--dpsgd); background:rgba(187,59,47,.06)}
+  .interp b{font-weight:800}
+</style></head>
 <body>
-<div class="nb">
-    <div class="pad">
-        <h1>How much accuracy does privacy cost?</h1>
-        <p class="lede">Each model below was trained with PATE on a 3&times;3&times;3 grid of settings. Drag the sliders
-            to move <b>between</b> those runs, where <code>&epsilon;</code> is the privacy budget the run spends,
-            accuracy is what the student model gets back.</p>
-
-        <div class="cell">
-            <div class="prompt in">In&nbsp;[1]:</div>
-            <div class="body">
-                <div class="tabs" id="tabs"></div>
-                <div id="sliders"></div>
-            </div>
-        </div>
-
-        <div class="cell">
-            <div class="prompt out">Out[1]:</div>
-            <div class="body">
-                <p class="config" id="config"></p>
-
-                <div class="gauges">
-                    <div class="gauge e">
-                        <div class="lab">privacy budget &epsilon;</div>
-                        <div class="big" id="eps">–</div>
-                        <div class="sub">lower = more private &middot; &delta; = 1e-5</div>
-                        <div class="bar2">
-                            <div class="f" id="epsf" style="width:0"></div>
-                        </div>
-                    </div>
-                    <div class="gauge a">
-                        <div class="lab">student test accuracy</div>
-                        <div class="big" id="acc">–</div>
-                        <div class="sub" id="accsub">held-out test set</div>
-                        <div class="bar2">
-                            <div class="f" id="accf" style="width:0"></div>
-                            <div class="basemark" id="basemark" style="display:none"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="stats" id="stats"></div>
-
-                <div class="plotwrap">
-                    <div class="cap" id="plotcap">privacy–utility plane</div>
-                    <svg id="plot" viewBox="0 0 720 400" preserveAspectRatio="xMidYMid meet" role="img"
-                         aria-label="privacy budget versus accuracy"></svg>
-                </div>
-                <p class="note">Filled dots are the 27 measured runs for this dataset; the ringed marker is the current
-                    slider position, linearly interpolated between them.</p>
-
-                <div class="interp" id="interp"><span id="interptext"></span></div>
-            </div>
-        </div>
+<div class="sheet">
+  <div class="head">
+    <h1>What does privacy <u>cost</u> us?</h1>
+    <p class="lede"><b class="dp">DP-SGD</b> (red) is the method we follow; <b class="pa">PATE</b> (blue) and the non-private ceiling (pencil) sit behind for context. Drag <b>teachers</b> or <b>epochs</b> and the x-axis swaps to that knob; otherwise it is accuracy vs the privacy budget <code>ε</code>.</p>
+  </div>
+  <div class="panel controls">
+    <p class="seclabel">— controls —</p>
+    <div class="row">
+      <div class="grp"><span class="lab">Dataset</span><div class="tabs" id="ds"></div></div>
+      <div class="grp"><span class="lab">Privacy level</span><div class="btns eps" id="eps"></div></div>
     </div>
+    <div class="row" style="margin-top:16px">
+      <div class="grp"><span class="lab">Teachers <span style="color:var(--faint);font-weight:400">(PATE)</span></span>
+        <div class="sl"><label>teachers</label><input type="range" id="sl-t"><div class="v" id="v-t"></div></div></div>
+      <div class="grp"><span class="lab">Epochs</span>
+        <div class="sl"><label>epochs</label><input type="range" id="sl-e"><div class="v" id="v-e"></div></div></div>
+    </div>
+  </div>
+  <div class="panel">
+    <p class="viewing" id="viewing"></p>
+    <div class="cards" id="cards"></div>
+    <figure class="plot">
+      <div class="plotbox">
+        <svg id="plot" viewBox="0 0 760 410" preserveAspectRatio="xMidYMid meet" role="img" aria-label="accuracy comparison"></svg>
+      </div>
+      <div class="legend">
+        <span class="focus" style="color:var(--dpsgd)"><i></i>DP-SGD</span>
+        <span style="color:var(--pate)"><i></i>PATE</span>
+        <span class="dash" style="color:var(--sgd)"><i></i>non-private SGD</span>
+      </div>
+      <figcaption><b>Fig. 1</b> — test accuracy vs privacy budget. <span class="note" id="note" style="display:inline"></span></figcaption>
+    </figure>
+    <div class="interp" id="interp"></div>
+  </div>
 </div>
-<footer id="footer"></footer>
 
 <script>
-    const DATA = [{
-        "ds": "cifar10",
-        "t": 10,
-        "e": 10,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 56.0663,
-        "acc": 0.263,
-        "order": 2.0,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 10,
-        "e": 10,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.1061,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 10,
-        "e": 10,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.1076,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 10,
-        "e": 50,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 56.0663,
-        "acc": 0.2972,
-        "order": 2.0,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 10,
-        "e": 50,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.1142,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 10,
-        "e": 50,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.1033,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 10,
-        "e": 100,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 56.0663,
-        "acc": 0.293,
-        "order": 2.0,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 10,
-        "e": 100,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.1204,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 10,
-        "e": 100,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.0951,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 50,
-        "e": 10,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 47.1155,
-        "acc": 0.4826,
-        "order": 2.0,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 50,
-        "e": 10,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.1659,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 50,
-        "e": 10,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.1254,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 50,
-        "e": 50,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 42.6829,
-        "acc": 0.5232,
-        "order": 2.0,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 50,
-        "e": 50,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.1677,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 50,
-        "e": 50,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.1236,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 50,
-        "e": 100,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 42.5653,
-        "acc": 0.5108,
-        "order": 2.0,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 50,
-        "e": 100,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.1841,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 50,
-        "e": 100,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.1237,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 100,
-        "e": 10,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 37.2947,
-        "acc": 0.4096,
-        "order": 2.0,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 100,
-        "e": 10,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.2389,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 100,
-        "e": 10,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.1318,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 100,
-        "e": 50,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 35.2089,
-        "acc": 0.5063,
-        "order": 2.0,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 100,
-        "e": 50,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.2651,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 100,
-        "e": 50,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.1367,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 100,
-        "e": 100,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 35.2271,
-        "acc": 0.5012,
-        "order": 2.0,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 100,
-        "e": 100,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.2423,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "cifar10",
-        "t": 100,
-        "e": 100,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.1366,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 10,
-        "e": 10,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 56.0663,
-        "acc": 0.6588,
-        "order": 2.0,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 10,
-        "e": 10,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.1143,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 10,
-        "e": 10,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.1092,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 10,
-        "e": 50,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 56.0663,
-        "acc": 0.592,
-        "order": 2.0,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 10,
-        "e": 50,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.0929,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 10,
-        "e": 50,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.1243,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 10,
-        "e": 100,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 56.0663,
-        "acc": 0.6751,
-        "order": 2.0,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 10,
-        "e": 100,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.1406,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 10,
-        "e": 100,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.0948,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 50,
-        "e": 10,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 15.2571,
-        "acc": 0.9144,
-        "order": 3.0,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 50,
-        "e": 10,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.41,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 50,
-        "e": 10,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.163,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 50,
-        "e": 50,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 13.0332,
-        "acc": 0.9369,
-        "order": 3.0,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 50,
-        "e": 50,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.4386,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 50,
-        "e": 50,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.1431,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 50,
-        "e": 100,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 12.8735,
-        "acc": 0.947,
-        "order": 3.0,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 50,
-        "e": 100,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.3644,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 50,
-        "e": 100,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.1442,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 100,
-        "e": 10,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 13.3109,
-        "acc": 0.8922,
-        "order": 3.5,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 100,
-        "e": 10,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.6767,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 100,
-        "e": 10,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.1879,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 100,
-        "e": 50,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 10.4633,
-        "acc": 0.925,
-        "order": 4.0,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 100,
-        "e": 50,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.7134,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 100,
-        "e": 50,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.2184,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 100,
-        "e": 100,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 9.4027,
-        "acc": 0.9343,
-        "order": 4.5,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 100,
-        "e": 100,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.707,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "mnist",
-        "t": 100,
-        "e": 100,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.1977,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 10,
-        "e": 10,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 56.0663,
-        "acc": 0.2637,
-        "order": 2.0,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 10,
-        "e": 10,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.1103,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 10,
-        "e": 10,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.1025,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 10,
-        "e": 50,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 56.0663,
-        "acc": 0.279,
-        "order": 2.0,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 10,
-        "e": 50,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.1025,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 10,
-        "e": 50,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.0757,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 10,
-        "e": 100,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 56.0663,
-        "acc": 0.2963,
-        "order": 2.0,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 10,
-        "e": 100,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.1125,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 10,
-        "e": 100,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.0759,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 50,
-        "e": 10,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 9.0723,
-        "acc": 0.1963,
-        "order": 3.5,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 50,
-        "e": 10,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.1966,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 50,
-        "e": 10,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.1391,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 50,
-        "e": 50,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 41.6079,
-        "acc": 0.5734,
-        "order": 2.0,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 50,
-        "e": 50,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.1977,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 50,
-        "e": 50,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.1239,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 50,
-        "e": 100,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 29.4743,
-        "acc": 0.6868,
-        "order": 2.5,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 50,
-        "e": 100,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.1387,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 50,
-        "e": 100,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.1022,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 100,
-        "e": 10,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 4.9474,
-        "acc": 0.1963,
-        "order": 5.0,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 100,
-        "e": 10,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.1963,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 100,
-        "e": 10,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.195,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 100,
-        "e": 50,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 7.3947,
-        "acc": 0.1963,
-        "order": 4.5,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 100,
-        "e": 50,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.1963,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 100,
-        "e": 50,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.1757,
-        "order": 22.39999999999999,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 100,
-        "e": 100,
-        "sigma": 6.7,
-        "teps": 8.0,
-        "eps": 30.639,
-        "acc": 0.6593,
-        "order": 2.5,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 100,
-        "e": 100,
-        "sigma": 57.0,
-        "teps": 4.0,
-        "eps": 4.0733,
-        "acc": 0.3215,
-        "order": 7.0,
-        "q": 1000
-    }, {
-        "ds": "svhn",
-        "t": 100,
-        "e": 100,
-        "sigma": 200.0,
-        "teps": 1.0,
-        "eps": 1.098,
-        "acc": 0.1297,
-        "order": 22.39999999999999,
-        "q": 1000
-    }];
-    const BASELINES = {"mnist": 0.993, "svhn": 0.922, "cifar10": null};
-    const TRAIN = {"mnist": 60000, "svhn": 73257, "cifar10": 50000};
-    const PRETTY = {"mnist": "MNIST", "svhn": "SVHN", "cifar10": "CIFAR-10"};
-    const GENERATED = "2026-06-16";
+const SGD=[{"ds": "mnist", "e": 10, "acc": 0.9916}, {"ds": "mnist", "e": 50, "acc": 0.9942}, {"ds": "mnist", "e": 100, "acc": 0.9944}, {"ds": "svhn", "e": 10, "acc": 0.9181}, {"ds": "svhn", "e": 50, "acc": 0.9261}, {"ds": "svhn", "e": 100, "acc": 0.9265}, {"ds": "cifar10", "e": 10, "acc": 0.7823}, {"ds": "cifar10", "e": 50, "acc": 0.8048}, {"ds": "cifar10", "e": 100, "acc": 0.8074}], DPSGD=[{"ds": "mnist", "e": 10, "teps": 1, "eps": 0.9961, "acc": 0.9298}, {"ds": "mnist", "e": 10, "teps": 4, "eps": 3.9901, "acc": 0.9337}, {"ds": "mnist", "e": 10, "teps": 8, "eps": 7.9903, "acc": 0.9321}, {"ds": "mnist", "e": 50, "teps": 1, "eps": 0.9991, "acc": 0.9495}, {"ds": "mnist", "e": 50, "teps": 4, "eps": 3.9925, "acc": 0.9616}, {"ds": "mnist", "e": 50, "teps": 8, "eps": 7.9916, "acc": 0.9656}, {"ds": "mnist", "e": 100, "teps": 1, "eps": 0.9958, "acc": 0.9294}, {"ds": "mnist", "e": 100, "teps": 4, "eps": 3.9961, "acc": 0.9675}, {"ds": "mnist", "e": 100, "teps": 8, "eps": 7.9929, "acc": 0.9708}, {"ds": "svhn", "e": 10, "teps": 1, "eps": 0.9927, "acc": 0.6814}, {"ds": "svhn", "e": 10, "teps": 4, "eps": 3.9981, "acc": 0.6913}, {"ds": "svhn", "e": 10, "teps": 8, "eps": 7.995, "acc": 0.7075}, {"ds": "svhn", "e": 50, "teps": 1, "eps": 0.9909, "acc": 0.7171}, {"ds": "svhn", "e": 50, "teps": 4, "eps": 3.997, "acc": 0.8032}, {"ds": "svhn", "e": 50, "teps": 8, "eps": 7.9949, "acc": 0.8226}, {"ds": "svhn", "e": 100, "teps": 1, "eps": 0.9964, "acc": 0.6084}, {"ds": "svhn", "e": 100, "teps": 4, "eps": 3.9978, "acc": 0.8163}, {"ds": "svhn", "e": 100, "teps": 8, "eps": 7.9988, "acc": 0.8336}, {"ds": "cifar10", "e": 10, "teps": 1, "eps": 0.997, "acc": 0.4814}, {"ds": "cifar10", "e": 10, "teps": 4, "eps": 4.0013, "acc": 0.5201}, {"ds": "cifar10", "e": 10, "teps": 8, "eps": 8.008, "acc": 0.5497}, {"ds": "cifar10", "e": 50, "teps": 1, "eps": 0.9996, "acc": 0.4489}, {"ds": "cifar10", "e": 50, "teps": 4, "eps": 3.9971, "acc": 0.5853}, {"ds": "cifar10", "e": 50, "teps": 8, "eps": 8.0073, "acc": 0.6125}, {"ds": "cifar10", "e": 100, "teps": 1, "eps": 0.9918, "acc": 0.4002}, {"ds": "cifar10", "e": 100, "teps": 4, "eps": 3.9988, "acc": 0.5922}, {"ds": "cifar10", "e": 100, "teps": 8, "eps": 8.0061, "acc": 0.6261}], PATE=[{"ds": "cifar10", "t": 50, "e": 50, "teps": 1, "eps": 0.9961, "acc": 0.1268, "lo": 0.1268, "hi": 0.1268}, {"ds": "cifar10", "t": 50, "e": 50, "teps": 4, "eps": 3.9997, "acc": 0.1863, "lo": 0.1863, "hi": 0.1863}, {"ds": "cifar10", "t": 50, "e": 50, "teps": 8, "eps": 7.972, "acc": 0.295, "lo": 0.295, "hi": 0.295}, {"ds": "cifar10", "t": 50, "e": 100, "teps": 1, "eps": 0.9961, "acc": 0.1014, "lo": 0.1014, "hi": 0.1014}, {"ds": "cifar10", "t": 50, "e": 100, "teps": 4, "eps": 3.9997, "acc": 0.1589, "lo": 0.1589, "hi": 0.1589}, {"ds": "cifar10", "t": 50, "e": 100, "teps": 8, "eps": 7.972, "acc": 0.2904, "lo": 0.2904, "hi": 0.2904}, {"ds": "cifar10", "t": 50, "e": 150, "teps": 1, "eps": 0.9961, "acc": 0.1146, "lo": 0.1146, "hi": 0.1146}, {"ds": "cifar10", "t": 50, "e": 150, "teps": 4, "eps": 3.9997, "acc": 0.1861, "lo": 0.1861, "hi": 0.1861}, {"ds": "cifar10", "t": 50, "e": 150, "teps": 8, "eps": 7.972, "acc": 0.2894, "lo": 0.2894, "hi": 0.2894}, {"ds": "cifar10", "t": 100, "e": 50, "teps": 1, "eps": 0.9961, "acc": 0.1086, "lo": 0.1086, "hi": 0.1086}, {"ds": "cifar10", "t": 100, "e": 50, "teps": 4, "eps": 3.9997, "acc": 0.2553, "lo": 0.2553, "hi": 0.2553}, {"ds": "cifar10", "t": 100, "e": 50, "teps": 8, "eps": 7.972, "acc": 0.4133, "lo": 0.4133, "hi": 0.4133}, {"ds": "cifar10", "t": 100, "e": 100, "teps": 1, "eps": 0.9961, "acc": 0.1258, "lo": 0.1258, "hi": 0.1258}, {"ds": "cifar10", "t": 100, "e": 100, "teps": 4, "eps": 3.9997, "acc": 0.2797, "lo": 0.2797, "hi": 0.2797}, {"ds": "cifar10", "t": 100, "e": 100, "teps": 8, "eps": 7.972, "acc": 0.4143, "lo": 0.4143, "hi": 0.4143}, {"ds": "cifar10", "t": 100, "e": 150, "teps": 1, "eps": 0.9961, "acc": 0.1346, "lo": 0.1346, "hi": 0.1346}, {"ds": "cifar10", "t": 100, "e": 150, "teps": 4, "eps": 3.9997, "acc": 0.2686, "lo": 0.2686, "hi": 0.2686}, {"ds": "cifar10", "t": 100, "e": 150, "teps": 8, "eps": 7.972, "acc": 0.4177, "lo": 0.4177, "hi": 0.4177}, {"ds": "cifar10", "t": 200, "e": 50, "teps": 1, "eps": 0.9961, "acc": 0.1568, "lo": 0.1568, "hi": 0.1568}, {"ds": "cifar10", "t": 200, "e": 50, "teps": 4, "eps": 3.9997, "acc": 0.3863, "lo": 0.3863, "hi": 0.3863}, {"ds": "cifar10", "t": 200, "e": 50, "teps": 8, "eps": 8.0446, "acc": 0.4587, "lo": 0.4587, "hi": 0.4587}, {"ds": "cifar10", "t": 200, "e": 100, "teps": 1, "eps": 0.9961, "acc": 0.1474, "lo": 0.1474, "hi": 0.1474}, {"ds": "cifar10", "t": 200, "e": 100, "teps": 4, "eps": 3.9997, "acc": 0.3663, "lo": 0.3663, "hi": 0.3663}, {"ds": "cifar10", "t": 200, "e": 100, "teps": 8, "eps": 8.0344, "acc": 0.4587, "lo": 0.4587, "hi": 0.4587}, {"ds": "cifar10", "t": 200, "e": 150, "teps": 1, "eps": 0.9961, "acc": 0.1728, "lo": 0.1728, "hi": 0.1728}, {"ds": "cifar10", "t": 200, "e": 150, "teps": 4, "eps": 3.9997, "acc": 0.36, "lo": 0.36, "hi": 0.36}, {"ds": "cifar10", "t": 200, "e": 150, "teps": 8, "eps": 8.0446, "acc": 0.455, "lo": 0.455, "hi": 0.455}, {"ds": "mnist", "t": 50, "e": 50, "teps": 1, "eps": 0.9961, "acc": 0.1848, "lo": 0.1848, "hi": 0.1848}, {"ds": "mnist", "t": 50, "e": 50, "teps": 4, "eps": 3.9997, "acc": 0.309, "lo": 0.309, "hi": 0.309}, {"ds": "mnist", "t": 50, "e": 50, "teps": 8, "eps": 7.972, "acc": 0.6574, "lo": 0.6574, "hi": 0.6574}, {"ds": "mnist", "t": 50, "e": 100, "teps": 1, "eps": 0.9961, "acc": 0.132, "lo": 0.132, "hi": 0.132}, {"ds": "mnist", "t": 50, "e": 100, "teps": 4, "eps": 3.9997, "acc": 0.3533, "lo": 0.3533, "hi": 0.3533}, {"ds": "mnist", "t": 50, "e": 100, "teps": 8, "eps": 7.972, "acc": 0.6817, "lo": 0.6817, "hi": 0.6817}, {"ds": "mnist", "t": 50, "e": 150, "teps": 1, "eps": 0.9961, "acc": 0.1583, "lo": 0.1583, "hi": 0.1583}, {"ds": "mnist", "t": 50, "e": 150, "teps": 4, "eps": 3.9997, "acc": 0.3404, "lo": 0.3404, "hi": 0.3404}, {"ds": "mnist", "t": 50, "e": 150, "teps": 8, "eps": 7.972, "acc": 0.6612, "lo": 0.6612, "hi": 0.6612}, {"ds": "mnist", "t": 100, "e": 50, "teps": 1, "eps": 0.9961, "acc": 0.2359, "lo": 0.2359, "hi": 0.2359}, {"ds": "mnist", "t": 100, "e": 50, "teps": 4, "eps": 3.9997, "acc": 0.6886, "lo": 0.6886, "hi": 0.6886}, {"ds": "mnist", "t": 100, "e": 50, "teps": 8, "eps": 7.972, "acc": 0.9, "lo": 0.9, "hi": 0.9}, {"ds": "mnist", "t": 100, "e": 100, "teps": 1, "eps": 0.9961, "acc": 0.2017, "lo": 0.2017, "hi": 0.2017}, {"ds": "mnist", "t": 100, "e": 100, "teps": 4, "eps": 3.9997, "acc": 0.7351, "lo": 0.7351, "hi": 0.7351}, {"ds": "mnist", "t": 100, "e": 100, "teps": 8, "eps": 7.972, "acc": 0.9037, "lo": 0.9037, "hi": 0.9037}, {"ds": "mnist", "t": 100, "e": 150, "teps": 1, "eps": 0.9961, "acc": 0.2203, "lo": 0.2203, "hi": 0.2203}, {"ds": "mnist", "t": 100, "e": 150, "teps": 4, "eps": 3.9997, "acc": 0.6867, "lo": 0.6867, "hi": 0.6867}, {"ds": "mnist", "t": 100, "e": 150, "teps": 8, "eps": 7.972, "acc": 0.91, "lo": 0.91, "hi": 0.91}, {"ds": "mnist", "t": 200, "e": 50, "teps": 1, "eps": 0.9961, "acc": 0.3419, "lo": 0.3419, "hi": 0.3419}, {"ds": "mnist", "t": 200, "e": 50, "teps": 4, "eps": 3.9997, "acc": 0.8999, "lo": 0.8999, "hi": 0.8999}, {"ds": "mnist", "t": 200, "e": 50, "teps": 8, "eps": 4.9068, "acc": 0.9003, "lo": 0.9003, "hi": 0.9003}, {"ds": "mnist", "t": 200, "e": 100, "teps": 1, "eps": 0.9961, "acc": 0.2991, "lo": 0.2991, "hi": 0.2991}, {"ds": "mnist", "t": 200, "e": 100, "teps": 4, "eps": 3.9997, "acc": 0.9011, "lo": 0.9011, "hi": 0.9011}, {"ds": "mnist", "t": 200, "e": 100, "teps": 8, "eps": 4.9068, "acc": 0.8967, "lo": 0.8967, "hi": 0.8967}, {"ds": "mnist", "t": 200, "e": 150, "teps": 1, "eps": 0.9961, "acc": 0.3181, "lo": 0.3181, "hi": 0.3181}, {"ds": "mnist", "t": 200, "e": 150, "teps": 4, "eps": 3.9997, "acc": 0.8952, "lo": 0.8952, "hi": 0.8952}, {"ds": "mnist", "t": 200, "e": 150, "teps": 8, "eps": 4.9068, "acc": 0.9026, "lo": 0.9026, "hi": 0.9026}, {"ds": "mnist", "t": 300, "e": 100, "teps": 1, "eps": 0.9961, "acc": 0.5144, "lo": 0.5144, "hi": 0.5144}, {"ds": "mnist", "t": 300, "e": 100, "teps": 4, "eps": 3.3474, "acc": 0.881, "lo": 0.881, "hi": 0.881}, {"ds": "mnist", "t": 300, "e": 100, "teps": 8, "eps": 3.3474, "acc": 0.881, "lo": 0.881, "hi": 0.881}, {"ds": "svhn", "t": 50, "e": 50, "teps": 1, "eps": 0.9961, "acc": 0.124, "lo": 0.124, "hi": 0.124}, {"ds": "svhn", "t": 50, "e": 50, "teps": 4, "eps": 3.9997, "acc": 0.1771, "lo": 0.1771, "hi": 0.1771}, {"ds": "svhn", "t": 50, "e": 50, "teps": 8, "eps": 7.972, "acc": 0.3639, "lo": 0.3639, "hi": 0.3639}, {"ds": "svhn", "t": 50, "e": 100, "teps": 1, "eps": 0.9961, "acc": 0.1434, "lo": 0.1434, "hi": 0.1434}, {"ds": "svhn", "t": 50, "e": 100, "teps": 4, "eps": 3.9997, "acc": 0.2152, "lo": 0.2152, "hi": 0.2152}, {"ds": "svhn", "t": 50, "e": 100, "teps": 8, "eps": 7.972, "acc": 0.3302, "lo": 0.3302, "hi": 0.3302}, {"ds": "svhn", "t": 50, "e": 150, "teps": 1, "eps": 0.9961, "acc": 0.1401, "lo": 0.1401, "hi": 0.1401}, {"ds": "svhn", "t": 50, "e": 150, "teps": 4, "eps": 3.9997, "acc": 0.223, "lo": 0.223, "hi": 0.223}, {"ds": "svhn", "t": 50, "e": 150, "teps": 8, "eps": 7.972, "acc": 0.3435, "lo": 0.3435, "hi": 0.3435}, {"ds": "svhn", "t": 100, "e": 50, "teps": 1, "eps": 0.9961, "acc": 0.1646, "lo": 0.1646, "hi": 0.1646}, {"ds": "svhn", "t": 100, "e": 50, "teps": 4, "eps": 3.9997, "acc": 0.3058, "lo": 0.3058, "hi": 0.3058}, {"ds": "svhn", "t": 100, "e": 50, "teps": 8, "eps": 7.972, "acc": 0.4573, "lo": 0.4573, "hi": 0.4573}, {"ds": "svhn", "t": 100, "e": 100, "teps": 1, "eps": 0.9961, "acc": 0.1641, "lo": 0.1641, "hi": 0.1641}, {"ds": "svhn", "t": 100, "e": 100, "teps": 4, "eps": 3.9997, "acc": 0.3362, "lo": 0.3362, "hi": 0.3362}, {"ds": "svhn", "t": 100, "e": 100, "teps": 8, "eps": 7.972, "acc": 0.5627, "lo": 0.5627, "hi": 0.5627}, {"ds": "svhn", "t": 100, "e": 150, "teps": 1, "eps": 0.9961, "acc": 0.1532, "lo": 0.1532, "hi": 0.1532}, {"ds": "svhn", "t": 100, "e": 150, "teps": 4, "eps": 3.9997, "acc": 0.3607, "lo": 0.3607, "hi": 0.3607}, {"ds": "svhn", "t": 100, "e": 150, "teps": 8, "eps": 7.972, "acc": 0.5726, "lo": 0.5726, "hi": 0.5726}, {"ds": "svhn", "t": 200, "e": 50, "teps": 1, "eps": 0.9961, "acc": 0.1428, "lo": 0.1428, "hi": 0.1428}, {"ds": "svhn", "t": 200, "e": 50, "teps": 4, "eps": 3.9997, "acc": 0.2261, "lo": 0.2261, "hi": 0.2261}, {"ds": "svhn", "t": 200, "e": 50, "teps": 8, "eps": 8.044, "acc": 0.2515, "lo": 0.2515, "hi": 0.2515}, {"ds": "svhn", "t": 200, "e": 100, "teps": 1, "eps": 0.9961, "acc": 0.1791, "lo": 0.1791, "hi": 0.1791}, {"ds": "svhn", "t": 200, "e": 100, "teps": 4, "eps": 3.9997, "acc": 0.4549, "lo": 0.4549, "hi": 0.4549}, {"ds": "svhn", "t": 200, "e": 100, "teps": 8, "eps": 8.0191, "acc": 0.5617, "lo": 0.5617, "hi": 0.5617}, {"ds": "svhn", "t": 200, "e": 150, "teps": 1, "eps": 0.9961, "acc": 0.1949, "lo": 0.1949, "hi": 0.1949}, {"ds": "svhn", "t": 200, "e": 150, "teps": 4, "eps": 3.9997, "acc": 0.5133, "lo": 0.5133, "hi": 0.5133}, {"ds": "svhn", "t": 200, "e": 150, "teps": 8, "eps": 8.0464, "acc": 0.6252, "lo": 0.6252, "hi": 0.6252}];
+const TRAIN={"mnist": 60000, "svhn": 73257, "cifar10": 50000}, PRETTY={"mnist": "MNIST", "svhn": "SVHN", "cifar10": "CIFAR-10"};
 
-    const uniq = a => [...new Set(a)].sort((x, y) => x - y);
-    const datasets = [...new Set(DATA.map(d => d.ds))];
-    const T = uniq(DATA.map(d => d.t));
-    const E = uniq(DATA.map(d => d.e));
-    const S = uniq(DATA.map(d => d.sigma));
+const datasets=[...new Set([...SGD,...DPSGD,...PATE].map(d=>d.ds))];
+const uniq=a=>[...new Set(a)].sort((x,y)=>x-y);
+const EPS=uniq(DPSGD.map(d=>d.teps));
+const EP_SGD=uniq([...SGD,...DPSGD].map(d=>d.e));
+const EP_PATE=uniq(PATE.map(d=>d.e));
+const E_ALL=uniq([...EP_SGD,...EP_PATE]);
+const E_MIN=Math.min(...E_ALL), E_MAX=Math.max(...E_ALL);
+const T_PATE=uniq(PATE.map(d=>d.t));
+const COL={sgd:"#8b8a82",dpsgd:"#bb3b2f",pate:"#2f5d9e"};
 
-    // lookup[ds]["t|e|s"] = row
-    const lookup = {};
-    DATA.forEach(d => {
-        (lookup[d.ds] ||= {})[`${d.t}|${d.e}|${d.sigma}`] = d;
-    });
+function tRange(ds){const ts=uniq(PATE.filter(r=>r.ds===ds).map(r=>r.t));return ts.length?[ts[0],ts[ts.length-1]]:[10,100];}
+function tValues(ds){return uniq(PATE.filter(r=>r.ds===ds).map(r=>r.t));}
 
-    const state = {
-        ds: datasets.includes("mnist") ? "mnist" : datasets[0],
-        t: T.includes(100) ? 100 : T[T.length - 1],
-        e: E.includes(100) ? 100 : E[E.length - 1],
-        s: S.includes(57) ? 57 : S[Math.floor(S.length / 2)],
-    };
+const state={ ds:datasets.includes("mnist")?"mnist":datasets[0], teps:EPS.includes(4)?4:EPS[0],
+  t:T_PATE.includes(100)?100:T_PATE[0], e:EP_SGD.includes(50)?50:EP_SGD[0], xMode:"eps" };
 
-    // ---------- trilinear interpolation over t x e x s ----------
-    const lerp = (a, b, f) => a + (b - a) * f;
+const ease=f=>f*f*(3-2*f), elerp=(a,b,f)=>a+(b-a)*ease(f);
+const clamp=(q,lo,hi)=>Math.max(lo,Math.min(hi,q));
+function br(axis,q){ if(q<=axis[0])return[0,0,0]; if(q>=axis[axis.length-1])return[axis.length-2,axis.length-1,1];
+  for(let i=0;i<axis.length-1;i++) if(q>=axis[i]&&q<=axis[i+1]) return[i,i+1,(q-axis[i])/(axis[i+1]-axis[i])]; }
+function interp1(axis,fn,q){if(axis.length===1)return fn(axis[0]);const[i0,i1,f]=br(axis,q);const a=fn(axis[i0]),b=fn(axis[i1]);return(a==null||b==null)?null:elerp(a,b,f);}
 
-    function bracket(axis, q) {
-        if (q <= axis[0]) return [0, 0, 0];
-        if (q >= axis[axis.length - 1]) return [axis.length - 2, axis.length - 1, 1];
-        for (let i = 0; i < axis.length - 1; i++) if (q >= axis[i] && q <= axis[i + 1]) return [i, i + 1, (q - axis[i]) / (axis[i + 1] - axis[i])];
+function sgdAt(ds,e){const recs=SGD.filter(r=>r.ds===ds);if(!recs.length)return null;
+  const acc=interp1(EP_SGD,ee=>{const r=recs.find(x=>x.e===ee);return r?r.acc:null},clamp(e,EP_SGD[0],EP_SGD[EP_SGD.length-1]));
+  return acc==null?null:{acc,eps:Infinity,clamped:false};}
+function dpsgdAt(ds,e,teps){const recs=DPSGD.filter(r=>r.ds===ds&&r.teps===teps);if(!recs.length)return null;
+  const ec=clamp(e,EP_SGD[0],EP_SGD[EP_SGD.length-1]);
+  const acc=interp1(EP_SGD,ee=>{const r=recs.find(x=>x.e===ee);return r?r.acc:null},ec);
+  const eps=interp1(EP_SGD,ee=>{const r=recs.find(x=>x.e===ee);return r?r.eps:null},ec);
+  return acc==null?null:{acc,eps,clamped:(e<EP_SGD[0]||e>EP_SGD[EP_SGD.length-1])};}
+function pateAt(ds,t,e,teps){const recs=PATE.filter(r=>r.ds===ds&&r.teps===teps);if(!recs.length)return null;
+  const TT=uniq(recs.map(r=>r.t)), EE=uniq(recs.map(r=>r.e));
+  const tc=clamp(t,TT[0],TT[TT.length-1]), ec=clamp(e,EE[0],EE[EE.length-1]);
+  const grid=(key)=>{
+    const[t0,t1,tf]=br(TT,tc),[e0,e1,ef]=br(EE,ec);
+    const g=(tt,ee)=>{const r=recs.find(x=>x.t===tt&&x.e===ee);return r?r[key]:null};
+    const a=g(TT[t0],EE[e0]),b=g(TT[t1],EE[e0]),c=g(TT[t0],EE[e1]),d=g(TT[t1],EE[e1]);
+    if([a,b,c,d].some(v=>v==null))return null;
+    return elerp(elerp(a,b,tf),elerp(c,d,tf),ef);
+  };
+  const acc=grid("acc"); if(acc==null)return null;
+  return {acc, eps:grid("eps"), clamped:(t<TT[0]||t>TT[TT.length-1]||e<EE[0]||e>EE[EE.length-1])};}
+
+const METHODS=[
+  {key:"dpsgd",name:"DP-SGD",col:COL.dpsgd,dash:false,focus:true, hasT:false,hasE:true, eSupport:()=>[EP_SGD[0],EP_SGD[EP_SGD.length-1]], at:s=>dpsgdAt(s.ds,s.e,s.teps)},
+  {key:"pate", name:"PATE",  col:COL.pate, dash:false,focus:false,hasT:true, hasE:true, eSupport:()=>[EP_PATE[0],EP_PATE[EP_PATE.length-1]], at:s=>pateAt(s.ds,s.t,s.e,s.teps)},
+  {key:"sgd",  name:"non-private SGD",col:COL.sgd,dash:true,focus:false,hasT:false,hasE:true, eSupport:()=>[EP_SGD[0],EP_SGD[EP_SGD.length-1]], at:s=>sgdAt(s.ds,s.e)},
+];
+
+const dsEl=document.getElementById("ds");
+datasets.forEach(d=>{const b=document.createElement("button");b.textContent=PRETTY[d]||d;b.onclick=()=>{state.ds=d;render();};dsEl.appendChild(b);});
+const epsEl=document.getElementById("eps");
+EPS.forEach(p=>{const b=document.createElement("button");b.textContent="ε ≈ "+p;b.onclick=()=>{state.teps=p;state.xMode="eps";render();};epsEl.appendChild(b);});
+const slT=document.getElementById("sl-t"); slT.step=1;
+const slE=document.getElementById("sl-e"); slE.min=E_MIN;slE.max=E_MAX;slE.step=1;slE.value=state.e;
+slT.addEventListener("input",e=>{state.t=+e.target.value;state.xMode="teachers";render();});
+slE.addEventListener("input",e=>{state.e=+e.target.value;state.xMode="epochs";render();});
+
+const SVG="http://www.w3.org/2000/svg",W=760,H=410,P={l:60,r:20,t:18,b:46};
+const mk=(t,a)=>{const e=document.createElementNS(SVG,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+const fmtPct=a=>(a*100).toFixed(1)+"%";
+
+function render(){
+  const[trlo,trhi]=tRange(state.ds);
+  slT.min=trlo; slT.max=trhi; state.t=clamp(state.t,trlo,trhi); slT.value=state.t;
+  [...dsEl.children].forEach((b,i)=>b.setAttribute("aria-pressed",datasets[i]===state.ds));
+  [...epsEl.children].forEach((b,i)=>b.setAttribute("aria-pressed",EPS[i]===state.teps));
+  document.getElementById("v-t").textContent=Math.round(state.t);
+  document.getElementById("v-e").textContent=Math.round(state.e);
+  const xName=state.xMode==="eps"?"privacy budget ε":(state.xMode==="teachers"?"teachers":"epochs");
+  document.getElementById("viewing").innerHTML=`viewing: <b>accuracy vs ${xName}</b> · ${PRETTY[state.ds]} · ε≈${state.teps} · ${Math.round(state.t)} teachers · ${Math.round(state.e)} epochs`;
+  drawCards(); drawPlot(); drawInterp();
+}
+
+function drawCards(){
+  const host=document.getElementById("cards"); host.innerHTML="";
+  METHODS.forEach(m=>{const v=m.at(state);
+    const epsTxt=!v?"—":(v.eps===Infinity?"ε = ∞ (non-private)":"ε ≈ "+v.eps.toFixed(2));
+    const cl=v&&v.clamped?" · clamped":"";
+    host.innerHTML+=`<div class="card ${m.key}"><div class="nm">${m.name}</div>
+      <div class="ac" style="color:${m.col}">${v?fmtPct(v.acc):"—"}</div>
+      <div class="ep ${v&&v.clamped?'clamp':''}">${epsTxt}${cl}</div></div>`;});
+}
+
+function drawPlot(){
+  const svg=document.getElementById("plot"); svg.innerHTML=""; const mode=state.xMode;
+  const series=[]; let ys=[];
+  METHODS.forEach(m=>{
+    if(mode==="eps"){
+      if(m.key==="sgd"){const v=m.at(state); if(v){series.push({m,flat:v.acc}); ys.push(v.acc);} return;}
+      const pts=[]; EPS.forEach(p=>{const v=m.at({...state,teps:p}); if(v&&isFinite(v.eps)){pts.push({x:v.eps,y:v.acc}); ys.push(v.acc);}});
+      if(pts.length) series.push({m,pts:pts.sort((a,b)=>a.x-b.x)});
+    } else if(mode==="teachers"){
+      if(!m.hasT){const v=m.at(state); if(v){series.push({m,flat:v.acc}); ys.push(v.acc);} return;}
+      const [lo,hi]=tRange(state.ds); const pts=[];
+      for(let i=0;i<=30;i++){const x=lo+(hi-lo)*i/30;const v=m.at({...state,t:x});if(v){pts.push({x,y:v.acc});ys.push(v.acc);}}
+      if(pts.length) series.push({m,pts});
+    } else { // epochs
+      const [lo,hi]=m.eSupport(); const pts=[];
+      for(let i=0;i<=30;i++){const x=lo+(hi-lo)*i/30;const v=m.at({...state,e:x});if(v){pts.push({x,y:v.acc});ys.push(v.acc);}}
+      if(pts.length) series.push({m,pts});
     }
+  });
 
-    function interp(ds, t, e, s) {
-        const [t0, t1, tf] = bracket(T, t), [e0, e1, ef] = bracket(E, e), [s0, s1, sf] = bracket(S, s);
-        const g = lookup[ds];
-        if (!g) return null;
-        const c = (ti, ei, si) => g[`${T[ti]}|${E[ei]}|${S[si]}`];
-        // all 8 corners must exist
-        for (const ti of [t0, t1]) for (const ei of [e0, e1]) for (const si of [s0, s1]) if (!c(ti, ei, si)) return null;
-        const blend = field => {
-            const v = (ti, ei, si) => c(ti, ei, si)[field];
-            const a = lerp(v(t0, e0, s0), v(t1, e0, s0), tf), b = lerp(v(t0, e1, s0), v(t1, e1, s0), tf);
-            const cc = lerp(v(t0, e0, s1), v(t1, e0, s1), tf), d = lerp(v(t0, e1, s1), v(t1, e1, s1), tf);
-            return lerp(lerp(a, b, ef), lerp(cc, d, ef), sf);
-        };
-        return {eps: blend("eps"), acc: blend("acc"), order: blend("order")};
-    }
+  const raw={dpsgd:[],pate:[],sgd:[]}; const bands=[];
+  const rt=Math.round(clamp(state.t,tRange(state.ds)[0],tRange(state.ds)[1]));
+  const re=Math.round(state.e);
+  if(mode==="eps"){
+    DPSGD.filter(r=>r.ds===state.ds&&r.e===re).forEach(r=>{raw.dpsgd.push({x:r.eps,y:r.acc});ys.push(r.acc);});
+    PATE.filter(r=>r.ds===state.ds&&r.t===rt&&r.e===re).forEach(r=>{raw.pate.push({x:r.eps,y:r.acc});bands.push({x:r.eps,lo:r.lo,hi:r.hi});ys.push(r.lo,r.hi);});
+  } else if(mode==="teachers"){
+    PATE.filter(r=>r.ds===state.ds&&r.teps===state.teps&&r.e===re).forEach(r=>{raw.pate.push({x:r.t,y:r.acc});bands.push({x:r.t,lo:r.lo,hi:r.hi});ys.push(r.lo,r.hi);});
+  } else {
+    SGD.filter(r=>r.ds===state.ds).forEach(r=>{raw.sgd.push({x:r.e,y:r.acc});ys.push(r.acc);});
+    DPSGD.filter(r=>r.ds===state.ds&&r.teps===state.teps).forEach(r=>{raw.dpsgd.push({x:r.e,y:r.acc});ys.push(r.acc);});
+    PATE.filter(r=>r.ds===state.ds&&r.teps===state.teps&&r.t===rt).forEach(r=>{raw.pate.push({x:r.e,y:r.acc});bands.push({x:r.e,lo:r.lo,hi:r.hi});ys.push(r.lo,r.hi);});
+  }
 
-    // ---------- controls ----------
-    const tabsEl = document.getElementById("tabs");
-    datasets.forEach(ds => {
-        const b = document.createElement("button");
-        b.className = "tab";
-        b.type = "button";
-        b.textContent = PRETTY[ds] || ds;
-        b.addEventListener("click", () => {
-            state.ds = ds;
-            rebuildPlot = true;
-            render();
-        });
-        tabsEl.appendChild(b);
-    });
+  let xmin,xmax,logx=false;
+  if(mode==="eps"){const xs=[...series.flatMap(s=>s.pts?s.pts.map(p=>p.x):[]),...raw.dpsgd.map(p=>p.x),...raw.pate.map(p=>p.x)];xmin=Math.max(0.5,Math.min(...xs,1)*0.9);xmax=Math.max(...xs,8)*1.12;logx=true;}
+  else if(mode==="teachers"){const tr=tRange(state.ds);xmin=tr[0];xmax=tr[1];}
+  else {xmin=E_MIN;xmax=E_MAX;}
+  const lx=v=>Math.log(clamp(v,xmin,xmax));
+  const X=v=>logx?P.l+(lx(v)-lx(xmin))/(lx(xmax)-lx(xmin))*(W-P.l-P.r):P.l+(clamp(v,xmin,xmax)-xmin)/((xmax-xmin)||1)*(W-P.l-P.r);
+  let ymin=Math.max(0,Math.min(...ys)-0.05), ymax=Math.min(1.0,Math.max(...ys)+0.05);
+  if(!isFinite(ymin)){ymin=0;ymax=1;}
+  const Y=a=>P.t+(1-(a-ymin)/((ymax-ymin)||1))*(H-P.t-P.b);
 
-    const sliderDefs = [
-        {key: "t", label: "Teachers", sub: "how many models vote", axis: T, step: 1, fmt: v => Math.round(v)},
-        {key: "e", label: "Student epochs", sub: "training length", axis: E, step: 1, fmt: v => Math.round(v)},
-        {key: "s", label: "Noise σ", sub: "added to each vote", axis: S, step: 0.1, fmt: v => v.toFixed(1)},
-    ];
-    const slidersEl = document.getElementById("sliders");
-    sliderDefs.forEach(def => {
-        const row = document.createElement("div");
-        row.className = "slider";
-        row.innerHTML = `<label>${def.label}<small>${def.sub}</small></label>
-    <input type="range" min="${def.axis[0]}" max="${def.axis[def.axis.length - 1]}" step="${def.step}" value="${state[def.key]}" id="sl-${def.key}">
-    <div class="val" id="val-${def.key}"></div>`;
-        slidersEl.appendChild(row);
-        row.querySelector("input").addEventListener("input", e => {
-            state[def.key] = parseFloat(e.target.value);
-            render();
-        });
-    });
+  const yt=[];for(let k=0;k<=4;k++)yt.push(ymin+(ymax-ymin)*k/4);
+  yt.forEach(a=>{svg.appendChild(mk("line",{x1:P.l,y1:Y(a),x2:W-P.r,y2:Y(a),stroke:"var(--gridheavy)"}));
+    const t=mk("text",{x:P.l-9,y:Y(a)+4,fill:"var(--muted)","font-size":11,"text-anchor":"end","font-family":"var(--mono)"});t.textContent=(a*100).toFixed(0)+"%";svg.appendChild(t);});
+  let xticks; if(mode==="eps")xticks=[1,2,4,8,16].filter(t=>t>=xmin&&t<=xmax); else if(mode==="teachers")xticks=tValues(state.ds); else xticks=E_ALL.filter(t=>t>=xmin&&t<=xmax);
+  xticks.forEach(t=>{svg.appendChild(mk("line",{x1:X(t),y1:P.t,x2:X(t),y2:H-P.b,stroke:"var(--gridheavy)"}));
+    const tx=mk("text",{x:X(t),y:H-P.b+17,fill:"var(--muted)","font-size":11,"text-anchor":"middle","font-family":"var(--mono)"});tx.textContent=t;svg.appendChild(tx);});
+  svg.appendChild(mk("line",{x1:P.l,y1:P.t,x2:P.l,y2:H-P.b,stroke:"var(--axis)","stroke-width":1.3}));
+  svg.appendChild(mk("line",{x1:P.l,y1:H-P.b,x2:W-P.r,y2:H-P.b,stroke:"var(--axis)","stroke-width":1.3}));
+  const xl=mk("text",{x:(P.l+W-P.r)/2,y:H-6,fill:"var(--ink)","font-size":12.5,"text-anchor":"middle"});
+  xl.textContent=mode==="eps"?"privacy budget ε   (log scale)":(mode==="teachers"?"number of teachers":"training epochs");svg.appendChild(xl);
+  const yl=mk("text",{x:14,y:(P.t+H-P.b)/2,fill:"var(--ink)","font-size":12.5,"text-anchor":"middle",transform:`rotate(-90 14 ${(P.t+H-P.b)/2})`});yl.textContent="test accuracy";svg.appendChild(yl);
 
-    const SVG = "http://www.w3.org/2000/svg";
-    const mk = (tag, a) => {
-        const e = document.createElementNS(SVG, tag);
-        for (const k in a) e.setAttribute(k, a[k]);
-        return e;
-    };
-    const W = 720, H = 400, PAD = {l: 58, r: 20, t: 18, b: 46};
-    let rebuildPlot = true, scaleX = null, scaleY = null;
+  if(mode==="teachers"){const gx=X(state.t);svg.appendChild(mk("line",{x1:gx,y1:P.t,x2:gx,y2:H-P.b,stroke:"#bbb","stroke-dasharray":"2 4"}));}
+  if(mode==="epochs"){const gx=X(state.e);svg.appendChild(mk("line",{x1:gx,y1:P.t,x2:gx,y2:H-P.b,stroke:"#bbb","stroke-dasharray":"2 4"}));}
 
-    function buildPlot() {
-        const svg = document.getElementById("plot");
-        svg.innerHTML = "";
-        const pts = DATA.filter(d => d.ds === state.ds);
-        if (!pts.length) return;
-        let emin = Math.min(...pts.map(p => p.eps)), emax = Math.max(...pts.map(p => p.eps));
-        emin = Math.max(0.5, emin * 0.85);
-        emax *= 1.12;
-        const lx = e => Math.log(Math.max(emin, Math.min(emax, e)));
-        scaleX = e => PAD.l + (lx(e) - lx(emin)) / (lx(emax) - lx(emin)) * (W - PAD.l - PAD.r);
-        scaleY = a => PAD.t + (1 - a) * (H - PAD.t - PAD.b);
+  bands.forEach(b=>{ if(b.hi-b.lo>1e-4){
+    svg.appendChild(mk("line",{x1:X(b.x),y1:Y(b.lo),x2:X(b.x),y2:Y(b.hi),stroke:COL.pate,"stroke-width":1.4,opacity:.22}));
+    [b.lo,b.hi].forEach(v=>svg.appendChild(mk("line",{x1:X(b.x)-3,y1:Y(v),x2:X(b.x)+3,y2:Y(v),stroke:COL.pate,"stroke-width":1.4,opacity:.22})));
+  }});
+  raw.pate.forEach(p=>svg.appendChild(mk("circle",{cx:X(p.x),cy:Y(p.y),r:3.5,fill:COL.pate,"fill-opacity":.3,stroke:COL.pate,"stroke-opacity":.4})));
+  raw.sgd.forEach(p=>svg.appendChild(mk("circle",{cx:X(p.x),cy:Y(p.y),r:3.5,fill:COL.sgd,"fill-opacity":.3,stroke:COL.sgd,"stroke-opacity":.4})));
 
-        const xticks = [1, 2, 4, 8, 16, 32, 64].filter(t => t >= emin && t <= emax);
-        xticks.forEach(t => {
-            svg.appendChild(mk("line", {
-                x1: scaleX(t),
-                y1: PAD.t,
-                x2: scaleX(t),
-                y2: H - PAD.b,
-                stroke: "var(--grid)",
-                "stroke-width": 1
-            }));
-        });
-        [0, .25, .5, .75, 1].forEach(a => {
-            svg.appendChild(mk("line", {
-                x1: PAD.l,
-                y1: scaleY(a),
-                x2: W - PAD.r,
-                y2: scaleY(a),
-                stroke: "var(--grid)",
-                "stroke-width": 1
-            }));
-        });
+  series.sort((a,b)=>(a.m.focus?1:0)-(b.m.focus?1:0));
+  series.forEach(s=>{const col=s.m.col, foc=s.m.focus; const op=foc?1:0.32;
+    if(s.flat!=null){svg.appendChild(mk("line",{x1:P.l,y1:Y(s.flat),x2:W-P.r,y2:Y(s.flat),stroke:col,"stroke-width":2.4,"stroke-dasharray":s.m.dash?"6 4":"none",opacity:s.m.dash?op*0.9:op}));return;}
+    if(s.pts&&s.pts.length){let d="";s.pts.forEach((p,i)=>d+=(i?"L":"M")+X(p.x)+","+Y(p.y));
+      svg.appendChild(mk("path",{d,fill:"none",stroke:col,"stroke-width":foc?2.8:2.4,"stroke-dasharray":s.m.dash?"6 4":"none",opacity:op}));}
+  });
+  raw.dpsgd.forEach(p=>svg.appendChild(mk("circle",{cx:X(p.x),cy:Y(p.y),r:5,fill:COL.dpsgd,stroke:"#fff","stroke-width":1.6})));
 
-        svg.appendChild(mk("line", {
-            x1: PAD.l,
-            y1: PAD.t,
-            x2: PAD.l,
-            y2: H - PAD.b,
-            stroke: "var(--axis)",
-            "stroke-width": 1.4
-        }));
-        svg.appendChild(mk("line", {
-            x1: PAD.l,
-            y1: H - PAD.b,
-            x2: W - PAD.r,
-            y2: H - PAD.b,
-            stroke: "var(--axis)",
-            "stroke-width": 1.4
-        }));
+  let note="";
+  if(mode==="eps") note="At "+Math.round(state.t)+" teachers / "+Math.round(state.e)+" epochs. Dots are the runs we measured; lines interpolate between them.";
+  else if(mode==="teachers") note="At ε≈"+state.teps+", "+Math.round(state.e)+" epochs. DP-SGD/baseline flat — no teachers.";
+  else note="At ε≈"+state.teps+", "+Math.round(state.t)+" teachers. Each method over its own epoch range.";
+  document.getElementById("note").textContent=note;
+}
 
-        // ticks + labels
-        xticks.forEach(t => {
-            svg.appendChild(mk("line", {
-                x1: scaleX(t),
-                y1: H - PAD.b,
-                x2: scaleX(t),
-                y2: H - PAD.b + 5,
-                stroke: "var(--axis)",
-                "stroke-width": 1.2
-            }));
-            const tx = mk("text", {
-                x: scaleX(t),
-                y: H - PAD.b + 18,
-                fill: "var(--muted)",
-                "font-size": 11.5,
-                "text-anchor": "middle",
-                "font-family": "var(--mono)"
-            });
-            tx.textContent = t;
-            svg.appendChild(tx);
-        });
-        [0, .25, .5, .75, 1].forEach(a => {
-            svg.appendChild(mk("line", {
-                x1: PAD.l - 5,
-                y1: scaleY(a),
-                x2: PAD.l,
-                y2: scaleY(a),
-                stroke: "var(--axis)",
-                "stroke-width": 1.2
-            }));
-            const ty = mk("text", {
-                x: PAD.l - 9,
-                y: scaleY(a) + 4,
-                fill: "var(--muted)",
-                "font-size": 11.5,
-                "text-anchor": "end",
-                "font-family": "var(--mono)"
-            });
-            ty.textContent = (a * 100) + "%";
-            svg.appendChild(ty);
-        });
-        const xl = mk("text", {
-            x: (PAD.l + W - PAD.r) / 2,
-            y: H - 7,
-            fill: "var(--ink)",
-            "font-size": 12.5,
-            "text-anchor": "middle"
-        });
-        xl.textContent = "privacy budget ε   (log scale)";
-        svg.appendChild(xl);
-        const yl = mk("text", {
-            x: 15,
-            y: (PAD.t + H - PAD.b) / 2,
-            fill: "var(--ink)",
-            "font-size": 12.5,
-            "text-anchor": "middle",
-            transform: `rotate(-90 15 ${(PAD.t + H - PAD.b) / 2})`
-        });
-        yl.textContent = "test accuracy";
-        svg.appendChild(yl);
-
-        const bl = BASELINES[state.ds];
-        if (bl != null) {
-            svg.appendChild(mk("line", {
-                x1: PAD.l,
-                y1: scaleY(bl),
-                x2: W - PAD.r,
-                y2: scaleY(bl),
-                stroke: "#888",
-                "stroke-dasharray": "4 4",
-                "stroke-width": 1.2
-            }));
-            const bt = mk("text", {
-                x: W - PAD.r - 2,
-                y: scaleY(bl) - 5,
-                fill: "#888",
-                "font-size": 11,
-                "text-anchor": "end"
-            });
-            bt.textContent = "non-private baseline";
-            svg.appendChild(bt);
-        }
-
-        pts.forEach(p => {
-            const r = p.t >= 100 ? 5 : p.t >= 50 ? 4.2 : 3.4;
-            svg.appendChild(mk("circle", {
-                cx: scaleX(p.eps),
-                cy: scaleY(p.acc),
-                r,
-                fill: "rgba(31,119,180,.55)",
-                stroke: "#1f77b4",
-                "stroke-width": 1
-            }));
-        });
-
-        svg.appendChild(mk("g", {id: "live"}));
-        rebuildPlot = false;
-    }
-
-    function drawLive(d) {
-        const live = document.getElementById("live");
-        if (!live) return;
-        live.innerHTML = "";
-        if (!d || !scaleX) return;
-        const cx = scaleX(d.eps), cy = scaleY(d.acc);
-        live.appendChild(mk("line", {
-            x1: cx,
-            y1: cy,
-            x2: cx,
-            y2: H - PAD.b,
-            stroke: "var(--eps)",
-            "stroke-dasharray": "3 4",
-            "stroke-width": 1.3
-        }));
-        live.appendChild(mk("line", {
-            x1: PAD.l,
-            y1: cy,
-            x2: cx,
-            y2: cy,
-            stroke: "var(--acc)",
-            "stroke-dasharray": "3 4",
-            "stroke-width": 1.3
-        }));
-        live.appendChild(mk("circle", {cx, cy, r: 9, fill: "#fff", stroke: "#000", "stroke-width": 2}));
-        live.appendChild(mk("circle", {cx, cy, r: 3, fill: "#000"}));
-    }
-
-    function interpretation(ds, t, d) {
-        const pretty = PRETTY[ds] || ds, per = Math.round((TRAIN[ds] || 0) / t), bl = BASELINES[ds];
-        const accP = (d.acc * 100).toFixed(1), epsR = d.eps.toFixed(1);
-        if (d.acc <= 0.20) return ["collapse", `<b>Collapse at ε≈${epsR}.</b> With ${Math.round(t)} teachers on ${pretty}, each trains on only ~${per.toLocaleString()} images, so the ensemble barely agrees and the noisy labels are near random (${accP}%).`];
-        if (bl != null && d.acc >= bl - 0.08) return ["strong", `<b>Strong privacy, little cost.</b> ${accP}% at ε≈${epsR} — within ${((bl - d.acc) * 100).toFixed(1)} pts of the non-private baseline (${(bl * 100).toFixed(1)}%). Strong teacher consensus lets the accountant certify a tight ε.`];
-        return ["mid", `<b>A working tradeoff.</b> ${accP}% at ε≈${epsR}${bl != null ? `, under the ${(bl * 100).toFixed(0)}% non-private baseline` : ""}. More noise tightens privacy at an accuracy cost; more teachers would firm up the consensus.`];
-    }
-
-    function render() {
-        document.querySelectorAll("#tabs .tab").forEach((b, i) => b.setAttribute("aria-pressed", datasets[i] === state.ds ? "true" : "false"));
-        document.getElementById("val-t").innerHTML = Math.round(state.t);
-        document.getElementById("val-e").innerHTML = Math.round(state.e);
-        document.getElementById("val-s").innerHTML = state.s.toFixed(1);
-
-        if (rebuildPlot) buildPlot();
-
-        const d = interp(state.ds, state.t, state.e, state.s);
-        const epsEl = document.getElementById("eps"), accEl = document.getElementById("acc");
-        const config = document.getElementById("config");
-        config.innerHTML = `PATE · <b>${PRETTY[state.ds] || state.ds}</b> · <b>${Math.round(state.t)}</b> teachers · <b>${Math.round(state.e)}</b> epochs · σ=<b>${state.s.toFixed(1)}</b>`;
-
-        if (!d) {
-            epsEl.textContent = "–";
-            accEl.textContent = "–";
-            drawLive(null);
-            document.getElementById("stats").innerHTML = "";
-            return;
-        }
-
-        const epsMax = Math.max(...DATA.map(x => x.eps));
-        epsEl.innerHTML = d.eps.toFixed(2);
-        accEl.innerHTML = `${(d.acc * 100).toFixed(1)}<span class="u">%</span>`;
-        document.getElementById("epsf").style.width = Math.min(100, d.eps / epsMax * 100) + "%";
-        document.getElementById("accf").style.width = (d.acc * 100) + "%";
-
-        const bl = BASELINES[state.ds], bm = document.getElementById("basemark");
-        if (bl != null) {
-            bm.style.display = "block";
-            bm.style.left = (bl * 100) + "%";
-        } else bm.style.display = "none";
-
-        const per = Math.round((TRAIN[state.ds] || 0) / state.t);
-        document.getElementById("stats").innerHTML = [
-            ["Rényi order α", d.order.toFixed(1)],
-            ["examples / teacher", "~" + per.toLocaleString()],
-            ["student queries", "1000"],
-            ["noise σ", state.s.toFixed(1)],
-        ].map(([k, v]) => `<div class="stat"><div class="n">${v}</div><div class="k">${k}</div></div>`).join("");
-
-        document.getElementById("plotcap").textContent = `privacy–utility plane · ${PRETTY[state.ds] || state.ds}`;
-        drawLive(d);
-
-        const [st, txt] = interpretation(state.ds, state.t, d);
-        const ie = document.getElementById("interp");
-        ie.className = "interp s-" + st;
-        document.getElementById("interptext").innerHTML = txt;
-    }
-
-    document.getElementById("footer").textContent =
-        `${DATA.length} measured runs · ${datasets.length} datasets · interpolated trilinearly · generated ${GENERATED}`;
-
-    render();
+function drawInterp(){
+  const ie=document.getElementById("interp");
+  const base=sgdAt(state.ds,state.e), dp=dpsgdAt(state.ds,state.e,state.teps), pa=pateAt(state.ds,state.t,state.e,state.teps);
+  const D=PRETTY[state.ds];
+  if(!dp){ie.textContent="";return;}
+  let txt=`<b>At ε≈${state.teps}, ${Math.round(state.e)} epochs on ${D}:</b> DP-SGD reaches <b style="color:var(--dpsgd)">${fmtPct(dp.acc)}</b>`;
+  if(base) txt+=` (non-private ceiling ${fmtPct(base.acc)})`;
+  if(pa){const diff=(dp.acc-pa.acc)*100; txt+=`. PATE at ${Math.round(state.t)} teachers: ${fmtPct(pa.acc)} — DP-SGD ${diff>=0?"leads":"trails"} by ${Math.abs(diff).toFixed(1)} pts.`;}
+  else txt+=".";
+  const collapse=pa&&pa.acc<=0.20;
+  if(collapse) txt+=` PATE near random: ${Math.round(state.t)} teachers gives only ~${Math.round((TRAIN[state.ds]||0)/state.t).toLocaleString()} examples each.`;
+  ie.className="interp"+(collapse?" collapse":"");
+  ie.innerHTML=txt;
+}
+render();
 </script>
-</body>
-</html>
+</body></html>
